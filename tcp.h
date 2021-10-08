@@ -45,6 +45,7 @@ public:
     void prepare_udp();
     void receive_sound();
     void rcv_tcpRRS();
+    void rcv_tcpTMS();
     quint8 pi_num;
 
 signals:

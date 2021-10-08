@@ -23,6 +23,7 @@ SOURCES += \
         tcp.cpp \
         tcp_srv.cpp \
         timers.cpp \
+        txt.cpp \
         udp_rad.cpp \
         udp_rcp.cpp \
         udp_srv.cpp

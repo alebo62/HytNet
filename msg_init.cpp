@@ -21,7 +21,7 @@ hrnp_no_pld_t  pwr_up_chk_req;
 hrnp_t               remote_monitor;
 hrnp_t 				 uart_config_req;
 hrnp_t 				 txt_notif_req;
-hrnp_t 				 txt_msg_tx;
+
 hrnp_t               zone_ch;
 hrnp_t               serialNum_req;
 hrnp_t               chan_status;
@@ -68,6 +68,7 @@ rtp_header rtp_hdr;
 
 quint8 ars_answer[16];
 quint8 ars_check[11 + 10];
+quint8 txt_msg_tx[255];
 void msg_init()
 {
     sARSmsg.header.msgType = 0;
@@ -75,6 +76,8 @@ void msg_init()
     sARSmsg.header.payloadLength[1] = 10;
     sARSmsg.arsMsgType = RegMessage;// =0
     sARSmsg.csbk = 0;
+
+    txt_msg_tx[0] = 0x09;
 
     // используем для подтверждений(len = 16) и запросов(len = 11)
     ars_answer[0] = 0x11; // rrs

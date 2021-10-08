@@ -44,13 +44,16 @@ void TCP::rcv_udpGPS()
 {
     ba_3003.resize(static_cast<int>(udpGPS_3003.pendingDatagramSize()));
     udpGPS_3003.readDatagram(ba_3003.data(), ba_3003.size());
+    //
+    // 1..2 opcode  80-notack   00-ack  A1-priv B1-group
+    // 3..4 len
+    // 5..8 reqid
+    // 9..12 dest
+    // 13..16 source
+    // 17 .. len - 3
+
 }
-QByteArray ba_3004;
-void TCP::rcv_udpTMS()
-{
-    ba_3004.resize(static_cast<int>(udpTMS_3004.pendingDatagramSize()));
-    udpTMS_3004.readDatagram(ba_3004.data(), ba_3004.size());
-}
+
 
 
 QByteArray ba_3006;
