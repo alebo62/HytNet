@@ -1,5 +1,5 @@
 QT -= gui
-QT += network multimedia
+QT += network
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         checksum.cpp \
+        gps.cpp \
         main.cpp \
         msg_init.cpp \
         route.cpp \

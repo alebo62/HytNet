@@ -46,6 +46,7 @@ public:
     void receive_sound();
     void rcv_tcpRRS();
     void rcv_tcpTMS();
+    void rcv_tcpGPS();
     quint8 pi_num;
 
 signals:

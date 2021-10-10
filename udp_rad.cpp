@@ -1,9 +1,7 @@
 #include "tcp.h"
 #include "messages.h"
-//#include <string>
 #include "enums.h"
-//quint16 msg_cnt = 0;
-//quint32 state = 0;
+
 
 extern hrnp_t         remote_monitor;
 extern hrnp_t         dig_audio_tx_req;
@@ -35,44 +33,27 @@ extern quint8 req_id[];
 extern void checksum(unsigned char*);
 extern QString host;
 
-
-
-
-
-QByteArray ba_3003;
-void TCP::rcv_udpGPS()
-{
-    ba_3003.resize(static_cast<int>(udpGPS_3003.pendingDatagramSize()));
-    udpGPS_3003.readDatagram(ba_3003.data(), ba_3003.size());
-    //
-    // 1..2 opcode  80-notack   00-ack  A1-priv B1-group
-    // 3..4 len
-    // 5..8 reqid
-    // 9..12 dest
-    // 13..16 source
-    // 17 .. len - 3
-
-}
-
-
-
 QByteArray ba_3006;
+
 void TCP::rcv_udpTLM()
 {
     ba_3006.resize(static_cast<int>(udpTLM_3006.pendingDatagramSize()));
     udpTLM_3006.readDatagram(ba_3006.data(), ba_3006.size());
-
+    qDebug() << "telemetria";
 }
+
 QByteArray ba_3007;
 void TCP::rcv_udpDTR()
 {
     ba_3007.resize(static_cast<int>(udpDTR_3007.pendingDatagramSize()));
     udpDTR_3007.readDatagram(ba_3007.data(), ba_3007.size());
-
+    qDebug() << "data";
 }
+
 QByteArray ba_3009;
 void TCP::rcv_udpSDM()
 {
     ba_3009.resize(static_cast<int>(udpSDM_3009.pendingDatagramSize()));
     udpSDM_3009.readDatagram(ba_3009.data(), ba_3009.size());
+    qDebug() << "self def message";
 }

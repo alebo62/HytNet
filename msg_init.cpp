@@ -59,6 +59,7 @@ extern void checksum_pep_no_pld(hrnp_no_pld_t *ip);
 extern void checksum_pep(hrnp_t *ip);
 extern quint8 tx[];
 extern quint8 mu_law;
+extern QString dest_rrs_ip;
 quint8 p[1] = {0};
 
 static int cs;
@@ -81,31 +82,44 @@ void msg_init()
 
     // используем для подтверждений(len = 16) и запросов(len = 11)
     ars_answer[0] = 0x11; // rrs
+
     ars_answer[1] = 0x00; // opcode
-    ars_answer[2] = 0x80;
+    ars_answer[2] = 0x80; // opcode
+
     ars_answer[3] = 0x00; // size
-    ars_answer[4] = 0x09;
-    ars_answer[5] = 0x00; // ip
-    ars_answer[6] = 0x00;
-    ars_answer[7] = 0x00;
-    ars_answer[8] = 0x00;
+    ars_answer[4] = 0x09; // size
+
+    ars_answer[5] = dest_rrs_ip.toInt(); // ip
+    ars_answer[6] = 0x00; // ip
+    ars_answer[7] = 0x00; // ip
+    ars_answer[8] = 0x00; // ip
+
     ars_answer[9] = 0x00; // result
-    ars_answer[10] = 0x00;
-    ars_answer[11] = 0x00;
-    ars_answer[12] = 0x00;
+
+    ars_answer[10] = 0x00; // time
+    ars_answer[11] = 0x00; // time
+    ars_answer[12] = 0x00; // time
     ars_answer[13] = 0x01; // time
-    ars_answer[12] = 0x00; // crc
-    ars_answer[13] = 0x03;
+
+    ars_answer[14] = 0x00; // crc
+    ars_answer[15] = 0x03;
+
+
+
 
     ars_check[0] = 0x11; // rrs
+
     ars_check[1] = 0x00; // opcode
     ars_check[2] = 0x02;
+
     ars_check[3] = 0x00; // size
     ars_check[4] = 0x04;
-    ars_check[5] = 0x0A; // ip
+
+    ars_check[5] = dest_rrs_ip.toInt(); // ip
     ars_check[6] = 0x00;
     ars_check[7] = 0x00;
     ars_check[8] = 0x00;
+
     ars_check[9] = 0x00; // crc
     ars_check[10] = 0x03;
 
@@ -389,4 +403,8 @@ void msg_init()
     br_cast_req.pep.pld[4] = 0x01; // notify
     br_cast_req.pep.Checksum = 0x00;
     br_cast_req.pep.MsgEnd = 0x03;
+
+    sTxtMsg_SimpMsg.header.msgType = 2;
+    sTxtMsg_SimpMsg.header.payloadLength[0] = 0;// not now
+
 }

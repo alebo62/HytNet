@@ -50,6 +50,24 @@ enum LocMsgTypes
     TrigLocStopAnswer //(0x07)
 };
 
+enum LocMsgTypesHytera
+{
+    StdLocImmReport  = 0xA0, //  1
+    EmgLocReportSrv  = 0xB0,  //  2
+    TrigLocReportSrv = 0xC0,// (0x03)
+    CondTrigReportSrv = 0xD0, //(0x04)
+    RssiReportConfigSrv = 0x0E
+};
+
+enum RrsMsgTypesHytera
+{
+    RegistrationRrs = 0x03,
+    RegistrationAckRrs = 0x80,
+    DeRegistrationRrs = 0x01,
+    OnLineCheckRrs = 0x02,
+    OnLineCheckAckRrs = 0x82
+};
+
 enum eARStype
 {
     RegMessage,// = 0x00 to Kupol

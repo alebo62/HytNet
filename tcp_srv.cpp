@@ -1,7 +1,7 @@
 #include "tcp.h"
 #include "messages.h"
 #include "enums.h"
-#include "/home/alex/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/arm-linux-gnueabihf/libc/usr/include/string.h"
+//#include "/home/alex/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/arm-linux-gnueabihf/libc/usr/include/string.h"
 
 using namespace std;
 
@@ -273,7 +273,7 @@ void TCP::tcp_receive()
     case 3: // location messages
         if(Radio_Reg_State == READY)
         {
-            qDebug() << "gps";
+            rcv_tcpGPS();
         }
         break;
     case 0: // ars messages
