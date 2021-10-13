@@ -40,6 +40,7 @@ extern strCCRpl      sChanChangeReply;
 extern strCCRpt      sChanChangeReport;
 extern strRldRpl     sReloadReplay;
 extern strCtrlRpl    sCtrlReply;
+extern char* sn;
 extern quint8 req_id[];
 extern void checksum(unsigned char*);
 extern QString host;
@@ -48,6 +49,7 @@ extern quint32 Radio_Reg_State;
 quint8 CallsDecoder[] = {3,1,5,2,4,6};
 extern void receive_sound();
 QByteArray ba_3005;
+
 void TCP::rcv_udpRCP()
 {
     ba_3005.resize(static_cast<int>(udpRCP_3005.pendingDatagramSize()));
@@ -125,9 +127,15 @@ void TCP::rcv_udpRCP()
             {
                 qDebug() << "S/N OK";  //  8digits 45020005+00
                 //Radio_Reg_State = SER_NUM;
-                for(int i = 0; i < 8; i++)
-                    sRegMsgReport.ser_num[9-i] = static_cast<unsigned char>(ba_3005.at(25 + (i << 1)));//  but len == 64
-                sRegMsgReport.ser_num[0] = sRegMsgReport.ser_num[1] = 0x30;
+                for(int i = 0; i < 10; i++){
+                    sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
+
+                //qDebug() << sRegMsgReport.ser_num[i];
+                }
+                //memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
+                //for(int i = 0; i < 8; i++)
+                //    sRegMsgReport.ser_num[9-i] = static_cast<unsigned char>(ba_3005.at(25 + (i << 1)));//  but len == 64
+                //sRegMsgReport.ser_num[0] = sRegMsgReport.ser_num[1] = 0x30;
                 msg_cnt++;
                 chan_status.packet_num[0] = msg_cnt >> 8; // page 103
                 chan_status.packet_num[1] = msg_cnt & 0xFF;
@@ -149,21 +157,17 @@ void TCP::rcv_udpRCP()
             if(ba_3005.at(17) == 0)
             {
                 qDebug() << "Chan status OK";
-                //       Radio_Reg_State = CH_STATUS;
                 //0: conventional digital
                 //1: conventional analog
                 //2: repeater digital
                 //3: repeater analog
                 //4: trunking digital
                 //5: trunking analog
-                if(ba_3005.at(20) == 0)
-                    sRegMsgReport.signal_mode = 1;
-                else if(ba_3005.at(20) == 1)
+                if(ba_3005.at(20) == 1)
                     sRegMsgReport.signal_mode = 0;
                 else
-                    qDebug() << "Unnown status:" << (int)ba_3005.at(20);
+                    sRegMsgReport.signal_mode = 1;
 
-                msg_cnt++;
                 radio_id.packet_num[0] = msg_cnt >> 8;  // page 139
                 radio_id.packet_num[1] = msg_cnt & 0xFF;
                 memcpy(buf_tx, reinterpret_cast<char*>(&radio_id), 17 );
@@ -184,18 +188,21 @@ void TCP::rcv_udpRCP()
             if(ba_3005.at(17) == 0)
             {
                 qDebug() << "Radio Id OK";
+                sRegMsgReport.header.msgType = 1;
+                sRegMsgReport.header.payloadLength[0] = 0;
+                sRegMsgReport.header.payloadLength[1] = 24;
+
+                sRegMsgReport.type = eRegReportMsg;
+                sRegMsgReport.none = 0x00;
+
+                sRegMsgReport.len[0] = 0;
+                sRegMsgReport.len[1] = 10;
 
                 sRegMsgReport.radio_id[3] = static_cast<unsigned char>(ba_3005.at(19));
                 sRegMsgReport.radio_id[2] = static_cast<unsigned char>(ba_3005.at(20));
                 sRegMsgReport.radio_id[1] = static_cast<unsigned char>(ba_3005.at(21));
                 sRegMsgReport.radio_id[0] = static_cast<unsigned char>(ba_3005.at(22));
-                sRegMsgReport.header.msgType = 1;
-                sRegMsgReport.header.payloadLength[0] = 0;
-                sRegMsgReport.header.payloadLength[1] = 24;
-                sRegMsgReport.len[0] = 0;
-                sRegMsgReport.len[1] = 10;
-                sRegMsgReport.none = 0x00;
-                sRegMsgReport.type = eRegReportMsg;
+
                 sRegMsgReport.reg_unreg_state = REGISTRATE;
 
                 tcp_conn_tim.start();
@@ -344,12 +351,13 @@ void TCP::rcv_udpRCP()
     }
     else
     {
+        qDebug() << "rcv RCP " << ba_3005.toHex();
         switch (Radio_Reg_State)
         {
         case WAIT_CALL_REPLY:
             if((ba_3005.at(13) == 0x41) && (ba_3005.at(14) == 0x88))
             {
-                if(ba_3005.at(17) == 0)
+                if(ba_3005.at(17) == eSucces)
                 {
                     sCallReply.requestResult = eSucces;
                     Radio_Reg_State = WAIT_CALL_REPORT;
@@ -369,41 +377,51 @@ void TCP::rcv_udpRCP()
                     sCallReply.requestResult = eFailure;
                     Radio_Reg_State = READY;// a если был прием???
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+                    tcp_srv.flush();
                 }
             }
             break;
         case WAIT_CALL_REPORT:
             if((ba_3005.at(13) == 0x41) && (ba_3005.at(14) == 0x80)) // page 94
             {
+
                 if(ba_3005.at(17) == 0)
                 {
+                    qDebug() << "41B8 0";
                     //                    memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     //                    sCallReport.callState = eCallInit;
                     //                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
                 }
                 else
                 {
+                    qDebug() << "41B8 1";
                     Radio_Reg_State = READY;
                     sCallReport.callState = eCallEnded;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
                 }
             }
             else if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8))
             {
+                qDebug() << "43B8";
                 if(ba_3005.at(17) == 1)// voice call
                 {
+                    qDebug() << "tx 3005";
                     Radio_Reg_State = WAIT_STOP_CALL_REPLY;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     sCallReport.callState = eCallInit;
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
                 }
                 else
                 {
+                    qDebug() << "to ready";
                     Radio_Reg_State = READY;
                     sCallReport.callState = eCallEnded;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
                 }
             }
             break;
@@ -411,11 +429,13 @@ void TCP::rcv_udpRCP()
         case WAIT_STOP_CALL_REPLY:
             if((ba_3005.at(13) == 0x41) && (ba_3005.at(14) == 0x80)) // page 94
             {
+                qDebug() << "4180";
                 if(ba_3005.at(17) == 0)
                 {
                     Radio_Reg_State = WAIT_STOP_CALL_HANGIN;
                     sCallStopReply.replyResult = eSucces;
                     tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
+                    tcp_srv.flush();
                     qDebug() << "WAIT_STOP_CALL_REPLY";
                 }
                 else
@@ -427,6 +447,7 @@ void TCP::rcv_udpRCP()
         case WAIT_STOP_CALL_HANGIN:
             if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8)) // page 82
             {
+                qDebug() << "43B8hang";
                 if(ba_3005.at(17) == 2)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(21)];
@@ -436,6 +457,7 @@ void TCP::rcv_udpRCP()
                     sCallReport.receivedId[2] = ba_3005.at(24);
                     sCallReport.receivedId[1] = ba_3005.at(25);
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
                     Radio_Reg_State = WAIT_STOP_CALL_ENDED;
                     qDebug() << "WAIT_STOP_CALL_HANGIN";
                 }
@@ -449,6 +471,7 @@ void TCP::rcv_udpRCP()
         case WAIT_STOP_CALL_ENDED:
             if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8)) // page 82
             {
+                qDebug() << "43B8end";
                 if(ba_3005.at(17) == 3)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(21)];
@@ -458,6 +481,7 @@ void TCP::rcv_udpRCP()
                     sCallReport.receivedId[2] = ba_3005.at(24);
                     sCallReport.receivedId[1] = ba_3005.at(25);
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
                     Radio_Reg_State = READY;
                     qDebug() << "WAIT_STOP_CALL_ENDED";
                 }
@@ -520,6 +544,7 @@ void TCP::rcv_udpRCP()
                     sCtrlReply.result = eFailure;
                 }
                 tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
+                tcp_srv.flush();
             }
             break;
         case WAIT_RELOAD_REPLY:
@@ -564,6 +589,10 @@ void TCP::rcv_udpRCP()
 #endif
                     Radio_Reg_State = RX;
                 }
+            }
+            else if((ba_3005.at(13) == 0x33) && (ba_3005.at(14) == 0x88))
+            {
+               //qDebug() << ba_3005.toHex();
             }
         case RX:
             if(ba_3005.at(3) == VOICE)// page85

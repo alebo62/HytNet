@@ -588,7 +588,6 @@ struct strRMRpt{ // registr msg report=26
     struct strMsgHeader header;
     quint8 type;
     quint8 none;
-    //quint8 version[2];
     quint8 len[2] ;
     quint8 ser_num[10];
     quint8 zone[2];
@@ -625,7 +624,7 @@ struct strCCRpl{ // chan change replay = 7
 
 struct strCtrlRpl
 { // ctrl replay = 8 + 4
-    struct strMsgHeader header;// 27.7.17
+    struct strMsgHeader header;
     quint8 type;
     quint8 none;
     quint8 reqid[4];
@@ -735,7 +734,7 @@ struct strTxtMsg_SimpMsg
     quint8 ReceiverType;// – 13 Тип получателя,
     bool IsAckRequired;// – 14 Требуется ли подтверждение,
     quint8 SequenceNumber;// 15 – Последовательный номер,
-    quint8 Text[140];// –  16-... Текстовое сообщение
+    quint8 Text[280];// –  16-... Текстовое сообщение
 };
 
 ////  *************** Location messages ***********************

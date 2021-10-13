@@ -22,6 +22,7 @@ TCP::TCP(QObject *parent) : QObject(parent)
     connect(&tcp_srv,SIGNAL(disconnected()),this,SLOT(tcp_disconn()));
     connect(&tcp_srv,SIGNAL(connected()),this,SLOT(tcp_conn()));
 
+    memcpy(aud_tx ,  sound_msg, 52);
     rad_conn_tim.setInterval(3000);
     rad_conn_tim.start();
     udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);

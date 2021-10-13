@@ -3,6 +3,12 @@
 
 #define CALL_FILTER_TIME 100
 
+enum MODES
+{
+    ANALOG_MODE = 0,
+    DIGITAL_MODE
+};
+
 enum REG_UNREG{
     REGISTRATE,// = 0
     UNREGISTRATE

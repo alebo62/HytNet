@@ -77,23 +77,18 @@ void TCP::rcv_udpRRS()
 */
 void TCP::rcv_tcpRRS()
 {
-    memcpy(req_id, ba.data() + 10, 4); // only for online check answer
-
-    ars_addr = dest_rrs_ip + QString::number(ars_check[6]) + ".";
-    ars_addr += QString::number(ars_check[7]) + ".";
-    ars_addr += QString::number(ars_check[8]);
+    memcpy(req_id, ba.data() + 5, 4); // only for online check answer
 
     switch (ba.at(4)) {
     case SuccessReg:
         ars_answer[9] = 0;
-
         ars_answer[6] = ba.at(6);
         ars_answer[7] = ba.at(7);
         ars_answer[8] = ba.at(8);
 
         crc(ars_answer, 16);
 
-        udpRRS_3002.writeDatagram((char*)ars_answer, 16, QHostAddress(ars_addr), RRS);
+        udpRRS_3002.writeDatagram((char*)ars_answer, 16, QHostAddress("10.0.0.111"), RRS);
         udpRRS_3002.flush();
         break;
     case FailureReg:
@@ -105,17 +100,17 @@ void TCP::rcv_tcpRRS()
 
         crc(ars_answer, 16);
 
-        udpRRS_3002.writeDatagram((char*)ars_answer, 16, QHostAddress(ars_addr), RRS);
+        udpRRS_3002.writeDatagram((char*)ars_answer, 16, QHostAddress(host), RRS);
         udpRRS_3002.flush();
         break;
     case QueryMessage:
-        ars_check[6] = ba.at(6);
-        ars_check[7] = ba.at(7);
-        ars_check[8] = ba.at(8);
+        ars_check[6] = ba.at(11);
+        ars_check[7] = ba.at(12);
+        ars_check[8] = ba.at(13);
 
         crc(ars_check, 11);
 
-        udpRRS_3002.writeDatagram((char*)ars_check, 11, QHostAddress(ars_addr), RRS);
+        udpRRS_3002.writeDatagram((char*)ars_check, 11, QHostAddress(host), RRS);
         udpRRS_3002.flush();
         break;
     default:
