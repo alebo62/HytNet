@@ -27,7 +27,8 @@ SOURCES += \
         txt.cpp \
         udp_rad.cpp \
         udp_rcp.cpp \
-        udp_srv.cpp
+        udp_srv.cpp \
+        rcp.cpp
 
 HEADERS += \
     enums.h \
@@ -37,5 +38,8 @@ HEADERS += \
 
 target.path = /home/pi
 INSTALLS += target
+
+DISTFILES += \
+    readme
 
 
