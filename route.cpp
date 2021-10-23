@@ -30,7 +30,21 @@ void route_rpi()
         proc.waitForFinished();
         sl = ((QString)proc.readAllStandardOutput()).split('\n');
     }
-    while(sl[sl.size() - 3].contains("5883") == false);            //  nano neo plus2  NN. Uluga
+    while(sl[sl.size() - 3].contains("5883") == false);            //  rpi  97  white box
+
+//    while(sl[sl.size() - 3].contains("2c60") == false);            //  rpi 144  2010
+//    while(sl[sl.size() - 3].contains("ba37") == false);            //  rpi 150  2004
+//    while(sl[sl.size() - 3].contains("0dd7") == false);            //  rpi 151  2012
+//    while(sl[sl.size() - 3].contains("f252") == false);            //  rpi 152  2005
+//    while(sl[sl.size() - 3].contains("213a") == false);            //  rpi 154  2007
+//    while(sl[sl.size() - 3].contains("0044") == false);            //  rpi 156  2006
+//    while(sl[sl.size() - 3].contains("46de") == false);            //  rpi 157  2008
+//    while(sl[sl.size() - 3].contains("e65b") == false);            //  rpi 158  2003
+//    while(sl[sl.size() - 3].contains("212b") == false);            //  rpi 159  2009
+//    while(sl[sl.size() - 3].contains("28ea") == false);            //  rpi 162  2011
+//    while(sl[sl.size() - 3].contains("7f91") == false);            //  rpi 161  2002
+//    while(sl[sl.size() - 3].contains("227f") == false);            //  rpi 160  2001
+
 #ifdef DBG
     qDebug() << "usb and serial ok";
 #endif

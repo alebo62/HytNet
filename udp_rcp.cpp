@@ -46,6 +46,9 @@ extern void checksum(unsigned char*);
 extern QString host;
 extern unsigned char buf_tx[64];
 extern quint32 Radio_Reg_State;
+extern quint32 enable_online;
+extern quint32 disable_online;
+extern quint32 monitor_online;
 quint8 CallsDecoder[] = {3,1,5,2,4,6};
 extern void receive_sound();
 QByteArray ba_3005;
@@ -130,7 +133,7 @@ void TCP::rcv_udpRCP()
                 for(int i = 0; i < 10; i++){
                     sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
 
-                //qDebug() << sRegMsgReport.ser_num[i];
+                    //qDebug() << sRegMsgReport.ser_num[i];
                 }
                 //memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
                 //for(int i = 0; i < 8; i++)
@@ -352,6 +355,55 @@ void TCP::rcv_udpRCP()
     else
     {
         qDebug() << "rcv RCP " << ba_3005.toHex();
+        if((ba_3005.at(13) == 0x49) && (ba_3005.at(14) == 0x88))// radio disable answer
+        {
+            disable_online = 0;
+            sCtrlReply.radio_id[0] = ba_3005.at(21);
+            sCtrlReply.radio_id[1] = ba_3005.at(20);
+            sCtrlReply.radio_id[2] = ba_3005.at(19);
+            sCtrlReply.radio_id[3] = ba_3005.at(18);
+            sCtrlReply.result =  ba_3005.at(17);
+            sCtrlReply.req_type = 0x01;
+            tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+            tcp_srv.flush();
+            qDebug() << "radio disable";
+        }
+        else if ((ba_3005.at(13) == 0x4A) && (ba_3005.at(14) == 0x88)) // radio enable answer
+        {
+            enable_online = 0;
+            sCtrlReply.radio_id[0] = ba_3005.at(21);
+            sCtrlReply.radio_id[1] = ba_3005.at(20);
+            sCtrlReply.radio_id[2] = ba_3005.at(19);
+            sCtrlReply.radio_id[3] = ba_3005.at(18);
+            sCtrlReply.result =  ba_3005.at(17);
+            sCtrlReply.req_type = 0x02;
+            tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+            tcp_srv.flush();
+            qDebug() << "radio enable";
+        }
+        else if ((ba_3005.at(13) == 0x34) && (ba_3005.at(14) == 0x88)) // radio enable answer
+            // 02 3488 0500 0a                 6f000000 f803  rm ack fail
+        {   // 02 3488 0500 00                 6f000000 0203  rm ack success
+            // 02 44b8 0c00 0100 0400 00000000 6f000000 b603  call broadcast
+            // 02 44b8 0c00 0300 0400 00000000 6f000000 b403  call broadcast
+            monitor_online = 0;
+            sCtrlReply.radio_id[0] = ba_3005.at(21);
+            sCtrlReply.radio_id[1] = ba_3005.at(20);
+            sCtrlReply.radio_id[2] = ba_3005.at(19);
+            sCtrlReply.radio_id[3] = ba_3005.at(18);
+            monitor_tim.stop();
+            if(ba_3005.at(17)){
+                sCtrlReply.result = 1;
+                qDebug() << "monitor online fail";
+            }
+            else{
+                sCtrlReply.result = 0;
+                qDebug() << "monitor online ok";
+            }
+            sCtrlReply.req_type = 0x03;
+            tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+            tcp_srv.flush();
+        }
         switch (Radio_Reg_State)
         {
         case WAIT_CALL_REPLY:
@@ -571,13 +623,20 @@ void TCP::rcv_udpRCP()
 
             if((ba_3005.at(13) == 0x44) && (ba_3005.at(14) == 0xB8)) // input call
             {
-                if(ba_3005.at(17)   == 1)
+                if(ba_3005.at(17) == 1)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(19)];
                     sCallReport.callState = eCallInit;
+
                     sCallReport.receivedId[1] = ba_3005.at(23);
                     sCallReport.receivedId[2] = ba_3005.at(22);
-                    sCallReport.receivedId[3] = ba_3005.at(21);
+                    if(ba_3005.at(19) == 4)
+                    {
+                        sCallReport.receivedId[3] = 222;
+                        qDebug() << "monitor call in";
+                    }
+                    else
+                        sCallReport.receivedId[3] = ba_3005.at(21);
 
                     sCallReport.calledId[1] = ba_3005.at(27);
                     sCallReport.calledId[2] = ba_3005.at(26);
@@ -592,7 +651,7 @@ void TCP::rcv_udpRCP()
             }
             else if((ba_3005.at(13) == 0x33) && (ba_3005.at(14) == 0x88))
             {
-               //qDebug() << ba_3005.toHex();
+                //qDebug() << ba_3005.toHex();
             }
         case RX:
             if(ba_3005.at(3) == VOICE)// page85
@@ -619,6 +678,15 @@ void TCP::rcv_udpRCP()
                     qDebug() << "hang time";
 #endif
                     Radio_Reg_State = RX_HT;
+                }
+                else if (ba_3005.at(17) == 3) {
+                    sCallReport.callState = eCallEnded;
+                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
+#ifdef DBG
+                    qDebug() << "monitor call end";
+#endif
+                    Radio_Reg_State = READY;
                 }
             }
 

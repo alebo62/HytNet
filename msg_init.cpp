@@ -55,6 +55,8 @@ struct strRldRpl        sReloadReplay;
 struct strCtrlRpl       sCtrlReply;
 struct strTxtMsg_SimpMsg sTxtMsg_SimpMsg;
 
+struct strLocMsgType_TrgRep sLocMsgType_TrgRep;
+
 strARSmsg        sARSmsg;
 
 extern unsigned short checksum (unsigned char *ip);
@@ -72,17 +74,42 @@ rtp_header rtp_hdr;
 
 quint8 ars_answer[16];
 quint8 ars_check[11];
+quint8 std_loc_imm_req[15];
 
 void msg_init()
 {
+    std_loc_imm_req[0] = 0x08;
+    std_loc_imm_req[1] = 0xA0;
+    std_loc_imm_req[2] = 0x01;
+    std_loc_imm_req[3] = 0x00;
+    std_loc_imm_req[4] = 0x08;
+    std_loc_imm_req[9] = 0x0A;// radio ip
+    std_loc_imm_req[14] = 0x03;
+
+
     sMsgType_Ping.header.msgType = 4;
     sMsgType_Ping.header.payloadLength[1] = 1;
+
+    sLocMsgType_TrgRep.header.msgType = 3;
+    sLocMsgType_TrgRep.header.payloadLength[0] = 0;
+    sLocMsgType_TrgRep.header.payloadLength[1] = 37+12;
+    memset(sLocMsgType_TrgRep.RadioId, 0, 4 );
+    memset(sLocMsgType_TrgRep.RequestId, 0, 4 );
+    memset(sLocMsgType_TrgRep.Result, 0, 4 );
+    memset(sLocMsgType_TrgRep.Altitude, 0, 4 );
+    memset(sLocMsgType_TrgRep.Heading, 0, 4 );
+    memset(sLocMsgType_TrgRep.Radius, 0, 4 );
 
     sMRRpt.header.msgType = 1;
     sMRRpt.header.payloadLength[0] = 0;
     sMRRpt.header.payloadLength[1] = 5;
+    sMRRpt.none = 0;
     sMRRpt.Msgtype = eModemTypeReport;// =0
+    sMRRpt.ver[0] = 1;
+    sMRRpt.ver[1] = 2;
+    sMRRpt.ModemType = 2; // Hytera!!!!!!!!!
 
+//
     sARSmsg.header.msgType = 0;
     sARSmsg.header.payloadLength[0] = 0;
     sARSmsg.header.payloadLength[1] = 10;
@@ -672,6 +699,11 @@ void msg_init()
 
     sCtrlReply.header.msgType = 1;
     sCtrlReply.header.payloadLength[0] = 0;
-    sCtrlReply.header.payloadLength[1] = 8 + 4; // add
+    sCtrlReply.header.payloadLength[1] = 12; // add
     sCtrlReply.type = eSuControlReply;
+    sCtrlReply.none = 0;
+    //sCtrlReply.reqid[4];
+    sCtrlReply.result = 0;
+    sCtrlReply.req_type = 0;
+    //sCtrlReply.radio_id[4];
 }

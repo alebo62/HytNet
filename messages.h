@@ -782,21 +782,21 @@ struct strTxtMsg_SimpMsg
 //    quint8 Result[4];   // 13-16
 //};
 
-//struct strLocMsgType_TrgRep
-//{
-//    struct strMsgHeader header;// 0-3
-//    quint8 LocMsgType = 5;  // 4
-//    quint8 RadioId[4];  // 5-8
-//    quint8 RequestId[4]; // 9-12
-//    quint8 Result[4];   // 13-16
+struct strLocMsgType_TrgRep
+{
+    struct strMsgHeader header;// 0-3
+    quint8 LocMsgType = 5;  // 4
+    quint8 RadioId[4];  // 5-8
+    quint8 RequestId[4]; // 9-12
+    quint8 Result[4];   // 13-16
 
-//    quint8 Latitude[4];// – 17..20 Широта,
-//    quint8 Longitude[4]; // 18-21 - Долгота,
-//    quint8 Altitude[4]; // 22-25  - Высота,
-//    quint8 Heading[4]; //  26-29 - Направление,
-//    quint8 Radius[4]; //- 30-33  Радиус,
-//    quint8 Speed[4]; //=  34-47  Скорость // 14...  // 14...
-//};
+    quint8 Latitude[8];// – 17..20 Широта,
+    quint8 Longitude[8]; // 18-21 - Долгота,
+    quint8 Altitude[8]; // 22-25  - Высота,
+    quint8 Heading[4]; //  26-29 - Направление,
+    quint8 Radius[4]; //- 30-33  Радиус,
+    quint8 Speed[4]; //=  34-47  Скорость // 14...  // 14...
+};
 
 //struct strLocMsgType_TrgStopReq
 //{

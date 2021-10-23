@@ -41,6 +41,8 @@ public:
     QTimer tcp_conn_tim;
     QTimer ping_tim;
     QTimer reload_tim;
+    QTimer radio_check_tim;
+    QTimer monitor_tim;
 
     void prepare_udp();
     void receive_sound();
@@ -48,6 +50,10 @@ public:
     void rcv_tcpTMS();
     void rcv_tcpGPS();
     void rcv_tcpRCP();
+    double get_latitude(quint32);
+    double get_longitude(quint32);
+    float get_speed(quint32);
+    quint32 get_direction(quint32);
     quint8 pi_num;
 
 signals:
@@ -62,13 +68,18 @@ public slots:
     void rcv_udpSDM();
     void rad_conn_tim_slot();
 
-    void tcp_conn_tim_slot();
     void tcp_conn();
     void tcp_disconn();
     void tcp_receive();
+    void udp_srv_slot();
+
+    void tcp_conn_tim_slot();
     void ping_tim_slot();
     void reload_tim_slot();
-    void udp_srv_slot();
+    void radio_check_tim_slot();
+    void monitor_tim_slot();
+
+
 };
 
 #endif // TCP_H

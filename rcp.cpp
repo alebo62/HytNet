@@ -48,6 +48,9 @@ extern hrnp_t           zone_ch;
 extern hrnp_t           radio_check;
 
 quint32 check_online = 0;
+quint32 disable_online = 0;
+quint32 enable_online = 0;
+quint32 monitor_online = 0;
 
 void TCP::rcv_tcpRCP()
 {
@@ -179,71 +182,81 @@ void TCP::rcv_tcpRCP()
     else if(ba.at(4) == eSuControlRequest)////тип(4)+ резерв(5)+id_req(6..9)+ReqType(10)+rcvId(11..14)
     {
         memcpy(sCtrlReply.reqid, ba.data() + 6, 4);
+        memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
         switch (ba.at(10)) {
         case 0: // Radio Check
-            msg_cnt++;
-            radio_check.packet_num[0] = msg_cnt >> 8;
-            radio_check.packet_num[1] = msg_cnt & 0xFF;
-
-            radio_check.pep.pld[0] = ba.at(14);
-            radio_check.pep.pld[1] = ba.at(13);
-            radio_check.pep.pld[2] = ba.at(12);
-            radio_check.pep.pld[3] = 0;
-            //check_online = ((quint32)ba.at(12) << 16) + ((quint32)(ba.at(13) << 8)) + ba.at(14);// this id we check
-            memcpy(buf_tx, reinterpret_cast<char*>(&radio_check), 17 );
-            memcpy(buf_tx + 17, reinterpret_cast<char*>(radio_check.pep.pld), radio_check.pep.num_of_bytes[0]);
-            memcpy(buf_tx + 17 + radio_check.pep.num_of_bytes[0], reinterpret_cast<char*>(&radio_check + 21), 2 );
-            checksum(buf_tx);
-            udpRCP_3005.writeDatagram((char*)buf_tx, radio_check.length[1], QHostAddress("10.0.0.222"), RCP);
-            udpRCP_3005.flush();
-            qDebug() << "radio check";
-
+            if(!check_online)
+            {
+                check_online = 1;
+                radio_check_tim.start();
+                memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
+                sCtrlReply.req_type = 0; // radio check
+                ars_addr = dest_rrs_ip + QString::number(ba.at(12))+ "."+QString::number(ba.at(13))+"."+ QString::number(ba.at(14));
+                ars_check[6] = ba.at(12);
+                ars_check[7] = ba.at(13);
+                ars_check[8] = ba.at(14);
+                crc(ars_check, 11);
+                udpRRS_3002.writeDatagram((char*)ars_check, 11, QHostAddress(ars_addr), RRS);
+                udpRRS_3002.flush();
+            }
+            //            qDebug() << "radio check";
             break;
         case 1:// Inhibid
-            radio_en_dis.pep.opcode[0] = 0x49;
-            radio_en_dis.pep.pld[0] = ba.at(14);
-            radio_en_dis.pep.pld[1] = ba.at(13);
-            radio_en_dis.pep.pld[2] = ba.at(12);
-            msg_cnt++;
-            radio_en_dis.packet_num[0] = msg_cnt >> 8;
-            radio_en_dis.packet_num[1] = msg_cnt & 0xFF;
-            memcpy(buf_tx, reinterpret_cast<char*>(&radio_en_dis), 17 );
-            memcpy(buf_tx + 17, reinterpret_cast<char*>(radio_en_dis.pep.pld), radio_en_dis.pep.num_of_bytes[0]);
-            memcpy(buf_tx + 17 + radio_en_dis.pep.num_of_bytes[0], reinterpret_cast<char*>(&radio_en_dis + 21), 2 );
-            checksum(buf_tx);
-            udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress("10.0.0.222"), RCP);
-            udpRCP_3005.flush();
-
+            if(!disable_online)
+            {
+                disable_online = 1;
+                radio_en_dis.pep.opcode[0] = 0x49;
+                radio_en_dis.pep.pld[0] = ba.at(14);
+                radio_en_dis.pep.pld[1] = ba.at(13);
+                radio_en_dis.pep.pld[2] = ba.at(12);
+                msg_cnt++;
+                radio_en_dis.packet_num[0] = msg_cnt >> 8;
+                radio_en_dis.packet_num[1] = msg_cnt & 0xFF;
+                memcpy(buf_tx, reinterpret_cast<char*>(&radio_en_dis), 17 );
+                memcpy(buf_tx + 17, reinterpret_cast<char*>(radio_en_dis.pep.pld), radio_en_dis.pep.num_of_bytes[0]);
+                memcpy(buf_tx + 17 + radio_en_dis.pep.num_of_bytes[0], reinterpret_cast<char*>(&radio_en_dis + 21), 2 );
+                checksum(buf_tx);
+                udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress(host), RCP);
+                udpRCP_3005.flush();
+            }
             break;
         case 2: // Uninhibid
-            radio_en_dis.pep.opcode[0] = 0x4A;
-            radio_en_dis.pep.pld[0] = ba.at(14);
-            radio_en_dis.pep.pld[1] = ba.at(13);
-            radio_en_dis.pep.pld[2] = ba.at(12);
-            msg_cnt++;
-            radio_en_dis.packet_num[0] = msg_cnt >> 8;
-            radio_en_dis.packet_num[1] = msg_cnt & 0xFF;
-            memcpy(buf_tx, reinterpret_cast<char*>(&radio_en_dis), 17 );
-            memcpy(buf_tx + 17, reinterpret_cast<char*>(radio_en_dis.pep.pld), radio_en_dis.pep.num_of_bytes[0]);
-            memcpy(buf_tx + 17 + radio_en_dis.pep.num_of_bytes[0], reinterpret_cast<char*>(&radio_en_dis + 21), 2 );
-            checksum(buf_tx);
-            udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress("10.0.0.222"), RCP);
-            udpRCP_3005.flush();
+            if(!enable_online)
+            {
+                enable_online = 1;
+                radio_en_dis.pep.opcode[0] = 0x4A;
+                radio_en_dis.pep.pld[0] = ba.at(14);
+                radio_en_dis.pep.pld[1] = ba.at(13);
+                radio_en_dis.pep.pld[2] = ba.at(12);
+                msg_cnt++;
+                radio_en_dis.packet_num[0] = msg_cnt >> 8;
+                radio_en_dis.packet_num[1] = msg_cnt & 0xFF;
+                memcpy(buf_tx, reinterpret_cast<char*>(&radio_en_dis), 17 );
+                memcpy(buf_tx + 17, reinterpret_cast<char*>(radio_en_dis.pep.pld), radio_en_dis.pep.num_of_bytes[0]);
+                memcpy(buf_tx + 17 + radio_en_dis.pep.num_of_bytes[0], reinterpret_cast<char*>(&radio_en_dis + 21), 2 );
+                checksum(buf_tx);
+                udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress(host), RCP);
+                udpRCP_3005.flush();
+            }
             break;
         case 3://  Monitor
-            remote_monitor.pep.pld[0] = ba.at(14);
-            remote_monitor.pep.pld[1] = ba.at(13);
-            remote_monitor.pep.pld[2] = ba.at(12);
-            msg_cnt++;
-            remote_monitor.packet_num[0] = msg_cnt >> 8;
-            remote_monitor.packet_num[1] = msg_cnt & 0xFF;
-            memcpy(buf_tx, reinterpret_cast<char*>(&remote_monitor), 17 );
-            memcpy(buf_tx + 17, reinterpret_cast<char*>(remote_monitor.pep.pld), remote_monitor.pep.num_of_bytes[0]);
-            memcpy(buf_tx + 17 + remote_monitor.pep.num_of_bytes[0], reinterpret_cast<char*>(&remote_monitor + 21), 2 );
-            checksum(buf_tx);
-            udpRCP_3005.writeDatagram((char*)buf_tx, remote_monitor.length[1], QHostAddress("10.0.0.111"), RCP);
-            udpRCP_3005.flush();
-
+            if(!monitor_online)
+            {
+                monitor_tim.start();
+                monitor_online = 1;
+                remote_monitor.pep.pld[0] = ba.at(14);
+                remote_monitor.pep.pld[1] = ba.at(13);
+                remote_monitor.pep.pld[2] = ba.at(12);
+                msg_cnt++;
+                remote_monitor.packet_num[0] = msg_cnt >> 8;
+                remote_monitor.packet_num[1] = msg_cnt & 0xFF;
+                memcpy(buf_tx, reinterpret_cast<char*>(&remote_monitor), 17 );
+                memcpy(buf_tx + 17, reinterpret_cast<char*>(remote_monitor.pep.pld), remote_monitor.pep.num_of_bytes[0]);
+                memcpy(buf_tx + 17 + remote_monitor.pep.num_of_bytes[0], reinterpret_cast<char*>(&remote_monitor + 21), 2 );
+                checksum(buf_tx);
+                udpRCP_3005.writeDatagram((char*)buf_tx, remote_monitor.length[1], QHostAddress(host), RCP);
+                udpRCP_3005.flush();
+            }
             break;
         case 4:// Dekey
 
