@@ -30,7 +30,7 @@ extern strCRpt          sCallReport;
 extern strCSRp          sCallStopReply;
 extern strCSRp          sStopCallReply;
 extern strCRp           sCallReply;
-extern strCallControl   sCallControl;
+//extern strCallControl   sCallControl;
 extern strRMRpt         sRegMsgReport;
 extern strMsgType_Ping  sMsgType_Ping;
 extern hrnp_t           zone_ch;

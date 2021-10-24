@@ -63,16 +63,6 @@ typedef struct __attribute__((__packed__))
     quint8 MsgEnd;
 } hdpep_t;
 
-//typedef struct __attribute__((__packed__))
-//{
-//    quint8 MsgHdr;
-//    quint8 opcode[2];
-//    quint8 num_of_bytes[2];
-//    quint8 pld[17];
-//    quint8 Checksum;
-//    quint8 MsgEnd;
-//} hdpep17_t;
-
 typedef struct
 {
     quint8 MsgHdr;
@@ -95,20 +85,6 @@ typedef struct
     quint8 check_sum[2];
     hdpep_t pep;// 19+...
 }__attribute__((__packed__)) hrnp_t;
-
-//typedef struct __attribute__((__packed__))
-//{
-//    quint8 header;// = 0x7E;
-//    quint8 version;// = 0x04;
-//    quint8 block;
-//    HRNP_opcode_types opcode;
-//    quint8 source;
-//    quint8 dest;
-//    quint8 packet_num[2];
-//    quint8 length[2];
-//    quint8 check_sum[2];
-//    hdpep17_t pep17;// 19+...
-//} hrnp17_t;
 
 
 typedef struct
@@ -145,6 +121,7 @@ typedef struct __attribute__((__packed__))
     quint32 radio_id;
 
 } call_req_t;
+
 typedef struct __attribute__((__packed__))
 {
     quint16 call_rep;//0x0841;//
@@ -443,6 +420,7 @@ typedef enum
     // 		PROCESS_RPT_LOCAL_PTT_WAIT_ACK = 0x2E,
     // 		PROCESS_RPT_LOCAL_PTT_TOT = 0x2F,
 }CallProcessType;
+
 typedef enum
 {
     CALLTYPE_PRIVATE = 0x00,//Private Call
@@ -455,6 +433,7 @@ typedef enum
     CALLTYPE_PRIORITY_GROUP,
     CALLTYPE_PRIORITY_ALL
 }CallType;
+
 // 	typedef enum
 // 	{
 // 		OPERATION_TYPE_VOICE = 0x41,
@@ -464,6 +443,7 @@ typedef enum
 // 		OPERATION_TYPE_TP,
 // 		OPERATION_TYPE_SUPPLEMENTARY,
 // 	}OperationType;
+
 typedef enum
 {
     PCFLAG_SEND_BY_RADIO,
@@ -522,10 +502,6 @@ typedef enum
 //    ES_CLOSING,
 //};
 
-////struct  strLocData
-////{
-
-////};
 typedef struct{
         /* первый байт */
         quint8 csrc_len: 	4;
@@ -547,12 +523,7 @@ typedef struct{
 //        quint16 length;
 //        quint8 slot_last;
     }__attribute__ ((packed)) rtp_header;
-//struct echoclient
-//{
-//    enum echoclient_states state; /* connection status */
-//    struct tcp_pcb *pcb;          /* pointer on the current tcp_pcb */
-//    struct pbuf *p_tx;            /* pointer on pbuf to be transmitted */
-//};
+
 
 
 //struct strEmgReport // = 6+7
@@ -822,63 +793,5 @@ struct strMsgType_Ping
 };
 
 
-//// ************** for Radio *****************
-
-//struct strSendMsg // len = 15 + payload
-//{
-//    quint8 commandDataSessionReq[2];//0x041D
-//    quint8 function;//01
-//    quint8 rawData;//0x50
-//    quint8 addressType;// 02 ip
-//    quint8 addressLen; // 04
-//    quint8 destIP[4];
-//    quint8 destPort[2];
-//    quint8 sessionID;
-//    quint8 payloadLen[2];
-//    quint8 payload[32];
-//    // + payload (ping , data, ...)
-//};
-
-//struct strCCR{ // chan change req = 8
-//    quint8 type;
-//    quint8 none;
-//    quint8 reqid[4];
-//    quint8 newZone[2];
-//    quint8 newChan[2] ;
-//};
-
-//struct strCRq{ // call req = 11
-//    quint8 type;
-//    quint8 none;
-//    quint8 reqid[4];
-//    quint8 callType;
-//    quint8 receivedId[4];
-//};
-
-//struct strCSRq{ // call stop req = 6
-//    quint8 type;
-//    quint8 none;
-//    quint8 reqid[4];
-//};
-
-//// ******* send to uart********
-//struct strCZC{ //  = 7
-//    quint8 typeMsg[2];
-//    quint8 func;
-//    quint8 zone[2];
-//    quint8 chan[2];
-//} ;
-
-struct strCallControl{ //  = 15
-    quint8 typeMsg[2];// 041E
-    quint8 func;
-    quint8 calltype;
-    quint8 rmtAdressType;//1
-    quint8 rmtAdressSize;//3
-    quint8 rmtAdress[3];
-    quint8 rmtPort[2];
-    quint8 groupIdSize;
-    quint8 groupId[3];
-} ;
 
 #endif // MESSAGES_H

@@ -46,7 +46,7 @@ struct strRMRpt         sRegMsgReport;
 struct strMRRpt         sMRRpt;
 struct strCRpt          sCallReport;
 struct strCRp           sCallReply;
-struct strCallControl   sCallControl;
+//struct strCallControl   sCallControl;
 extern quint32          Radio_Reg_State;
 struct strCSRp          sCallStopReply;
 struct strCCRpl         sChanChangeReply;
@@ -668,12 +668,12 @@ void msg_init()
     sCallReply.type = eCallReplayMsg;
     sCallReply.none = 0x00;
 
-    sCallControl.typeMsg[0] = 0x04;
-    sCallControl.typeMsg[1] = 0x1E;
-    sCallControl.rmtPort[0] = sCallControl.rmtPort[1] = 0x00;
-    sCallControl.rmtAdressSize = 3;
-    sCallControl.groupIdSize = 3;
-    sCallControl.rmtAdressType = 0x01;
+//    sCallControl.typeMsg[0] = 0x04;
+//    sCallControl.typeMsg[1] = 0x1E;
+//    sCallControl.rmtPort[0] = sCallControl.rmtPort[1] = 0x00;
+//    sCallControl.rmtAdressSize = 3;
+//    sCallControl.groupIdSize = 3;
+//    sCallControl.rmtAdressType = 0x01;
 
     sCallStopReply.header.msgType = 1;
     sCallStopReply.header.payloadLength[0] = 0;

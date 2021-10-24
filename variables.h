@@ -11,10 +11,12 @@ quint16 hyterus_port = 40042;
 quint16 hyt_udp_port;
 quint8 i = 111;
 QString dest_rrs_ip = host.mid(0, 3);// 10. + "0." + "0." + QString::number(i);
+
 //char* sn = "511TPH2812";
 char* sn = "511TPH2814";
 
 quint8 aud_tx[532];
+
 quint8 sound_msg[52 + 480] = {0x7e,4,0,1,0x20,0x10,0,0,0x02,0x14,0x00,0x00,
                        0x90,0x00,
                        0,0x44, // 14-15  seq number
