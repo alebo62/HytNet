@@ -43,6 +43,8 @@ public:
     QTimer reload_tim;
     QTimer radio_check_tim;
     QTimer monitor_tim;
+    QTimer rx_tim;
+    QTimer tx_tim;
 
     void prepare_udp();
     void receive_sound();
@@ -78,6 +80,8 @@ public slots:
     void reload_tim_slot();
     void radio_check_tim_slot();
     void monitor_tim_slot();
+    void rx_tim_slot();
+    void tx_tim_slot();
 
 
 };

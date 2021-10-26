@@ -18,7 +18,7 @@ extern QString          hadrr, host;
 extern quint16          hyt_udp_port;
 extern quint16          hyterus_port;
 extern quint8           last_abonent[4];
-extern quint16          msg_cnt;
+extern volatile quint16 msg_cnt;
 extern quint8           mu_law;
 extern quint32          ping_counter;
 extern hrnp_t           ptt_release_req;
@@ -58,7 +58,7 @@ void TCP::rcv_tcpRCP()
     {
         if(sRegMsgReport.signal_mode == DIGITAL_MODE)
         {
-            if(Radio_Reg_State == READY)
+            if(Radio_Reg_State == READY)// init call
             {
                 memcpy(sCallReply.reqid, ba.data() + 6, 4);
                 sCallReport.callType = ba.at(10);
@@ -98,6 +98,26 @@ void TCP::rcv_tcpRCP()
                 Radio_Reg_State = WAIT_CALL_REPLY;
                 udpRCP_3005.writeDatagram((char*)buf_tx, call_req.length[1], QHostAddress(host), RCP);
                 udpRCP_3005.flush();
+                tx_tim.start();
+            }
+            else if (Radio_Reg_State == RX_HT) // quick answer (only press ptt)
+            {
+                memcpy(sCallReply.reqid, ba.data() + 6, 4);
+                sCallReport.callType = ba.at(10);
+                sCallReply.requestResult = eSucces;
+                Radio_Reg_State = WAIT_CALL_REPORT;
+                tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+                msg_cnt++;
+                ptt_press_req.packet_num[0] = msg_cnt >> 8;// page 159
+                ptt_press_req.packet_num[1] = msg_cnt & 0xFF;
+                memcpy(buf_tx, reinterpret_cast<char*>(&ptt_press_req), 17 );
+                memcpy(buf_tx + 17, reinterpret_cast<char*>(ptt_press_req.pep.pld), ptt_press_req.pep.num_of_bytes[0]);
+                memcpy(buf_tx + 17 + ptt_press_req.pep.num_of_bytes[0], reinterpret_cast<char*>(&ptt_press_req + 21), 2 );
+                checksum(buf_tx);
+                udpRCP_3005.writeDatagram((char*)buf_tx, ptt_press_req.length[1], QHostAddress(host), RCP);
+                udpRCP_3005.flush();
+                tx_tim.start();
+                rx_tim.stop();
             }
         }
         else if(sRegMsgReport.signal_mode == ANALOG_MODE)
@@ -125,7 +145,7 @@ void TCP::rcv_tcpRCP()
             if((Radio_Reg_State == WAIT_STOP_CALL_REPLY) || (Radio_Reg_State == WAIT_STOP_CALL_HANGIN))// 0x0A
             {
                 //sound1_timer.stop();
-                //Radio_Reg_State = WAIT_STOP_CALL_REPLY;
+                Radio_Reg_State = WAIT_STOP_CALL_REPLY;
                 //start_sound = 0;
                 //sound_buff_cnt_in = 0;
                 memcpy(sCallStopReply.reqid, ba.data() + 2 + sizeof(header), 4);
@@ -138,7 +158,8 @@ void TCP::rcv_tcpRCP()
                 checksum(buf_tx);
                 //returned = libusb_bulk_transfer(usb_hdl, 4, buf_tx, ptt_release_req.length[1], &act_len, 1000);
                 udpRCP_3005.writeDatagram((char*)buf_tx, ptt_release_req.length[1], QHostAddress(host), RCP);
-                udpRCP_3005.flush();
+                //udpRCP_3005.flush();
+                qDebug() << "send ptt release";
             }
         }
         else // analog mode

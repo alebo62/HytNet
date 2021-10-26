@@ -19,6 +19,8 @@ TCP::TCP(QObject *parent) : QObject(parent)
     connect(&reload_tim,   SIGNAL(timeout()), this, SLOT(reload_tim_slot()));
     connect(&radio_check_tim,   SIGNAL(timeout()), this, SLOT(radio_check_tim_slot()));
     connect(&monitor_tim,   SIGNAL(timeout()), this, SLOT(monitor_tim_slot()));
+    connect(&rx_tim,   SIGNAL(timeout()), this, SLOT(rx_tim_slot()));
+    connect(&tx_tim,   SIGNAL(timeout()), this, SLOT(tx_tim_slot()));
 
     connect(&tcp_srv,SIGNAL(readyRead()),this,SLOT(tcp_receive()));
     connect(&tcp_srv,SIGNAL(disconnected()),this,SLOT(tcp_disconn()));
@@ -33,6 +35,8 @@ TCP::TCP(QObject *parent) : QObject(parent)
     ping_tim.setInterval(11000);
     reload_tim.setInterval(10000);
     radio_check_tim.setInterval(2500);
+    rx_tim.setInterval(5000);
+    tx_tim.setInterval(5000);
 
     //qDebug()<< dest_rrs;
 }

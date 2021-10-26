@@ -19,6 +19,7 @@ void TCP::rad_conn_tim_slot()
 {
     qDebug() << "connect";
     udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
+    udpRCP_3005.flush();
 }
 
 void TCP::tcp_conn_tim_slot()
@@ -54,6 +55,9 @@ void TCP::reload_tim_slot()
     udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
     Radio_Reg_State = INIT_STATE;
     msg_cnt = 0;
+#ifdef DBG
+    qDebug() << "reload tim slot";
+#endif
 }
 
 void TCP::radio_check_tim_slot()
@@ -66,7 +70,9 @@ void TCP::radio_check_tim_slot()
         radio_check_tim.stop();
         tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
         tcp_srv.flush();
+#ifdef DBG
         qDebug() << "radio check timer";
+#endif
     }
 }
 
@@ -80,7 +86,27 @@ void TCP::monitor_tim_slot()
         monitor_tim.stop();
         tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
         tcp_srv.flush();
+#ifdef DBG
         qDebug() << "radio monitor timer";
+#endif
     }
 
+}
+
+void TCP::rx_tim_slot()
+{
+    Radio_Reg_State = READY;
+    rx_tim.stop();
+#ifdef DBG
+    qDebug() << "rx timer slot";
+#endif
+}
+
+void TCP::tx_tim_slot()
+{
+    Radio_Reg_State = READY;
+    tx_tim.stop();
+#ifdef DBG
+    qDebug() << "tx timer slot";
+#endif
 }

@@ -41,7 +41,7 @@ quint8      last_abonent[4];
 quint8      mu_law;
 quint32     ping_counter;
 quint32     Radio_Reg_State;
-quint8      req_id[4];
+quint8      req_id[4];//        msg_cnt++;
 QByteArray  tcp_tx;
 
 void TCP::tcp_receive()
@@ -55,7 +55,7 @@ void TCP::tcp_receive()
         tcp_srv.write(reinterpret_cast<char*>(&sMsgType_Ping), sizeof(sMsgType_Ping));
         break;
     case 1: // control messages
-        qDebug() << "tcp:" << ba.toHex();
+        qDebug() << "tcp:" << ba.toHex() << Radio_Reg_State;
         rcv_tcpRCP();
         break;
     case 3: // location messages

@@ -2,7 +2,7 @@
 #include "messages.h"
 //#include <string>
 #include "enums.h"
-quint16 msg_cnt = 0;
+volatile quint16 msg_cnt = 0;
 quint32 state = 0;
 unsigned char ack[] =    {0x7e,3,0,0x10,0x20,0x10,0,0,0,0x0C,0x60,0x00};
 unsigned char conn[] =   {0x7e,4,0,0xfe,0x20,0x10,0,0,0,0x0c,0x60,0xe1};
@@ -62,7 +62,9 @@ void TCP::rcv_udpRCP()
     {
         if(ba_3005.at(3) == 0xFD)
         {
+#ifdef DBG
             qDebug() << "FD";
+#endif
             state = 1;
             rad_conn_tim.stop();
             ack[4] = pi_num = ba_3005.at(5);
@@ -83,7 +85,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0)
             {
+#ifdef DBG
                 qDebug() << "Radio_Reg_State : POWER UP check OK";
+#endif
                 msg_cnt++;
                 zone_ch.packet_num[0] = msg_cnt >> 8;  // page 96
                 zone_ch.packet_num[1] = msg_cnt & 0xFF;
@@ -102,7 +106,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if((ba_3005.at(17) == 0) && (ba_3005.at(18) == 0) && (ba_3005.at(19) == 0) && (ba_3005.at(20) == 0))
             {
+#ifdef DBG
                 qDebug() << "Zone Channel OK";
+#endif
                 //Radio_Reg_State = ZONE_CH;
                 sRegMsgReport.zone[1] = ba_3005.at(25);
                 sRegMsgReport.zone[0] = ba_3005.at(26);
@@ -119,7 +125,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "rx Zone Channel fail ";
+#endif
         }
         else if((ba_3005.at(13) == 0x01)&& (ba_3005.at(14) == 0x82) && (state == 3))// && (rx[17] == 0))
         {
@@ -128,7 +136,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if((ba_3005.at(17) == 0) && (ba_3005.at(18) == 0) && (ba_3005.at(19) == 0) && (ba_3005.at(20) == 0))
             {
+#ifdef DBG
                 qDebug() << "S/N OK";  //  8digits 45020005+00
+#endif
                 //Radio_Reg_State = SER_NUM;
                 for(int i = 0; i < 10; i++){
                     sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
@@ -150,7 +160,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "rx S/N msg fail " ;
+#endif
         }
         else if((ba_3005.at(13) == 0xE7)&& (ba_3005.at(14) == 0x80) && (state == 4))// && (rx[17] == 0))
         {
@@ -159,7 +171,10 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0)
             {
+#ifdef DBG
                 qDebug() << "Chan status OK";
+#endif
+
                 //0: conventional digital
                 //1: conventional analog
                 //2: repeater digital
@@ -181,7 +196,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "rx Chan Status msg fail ";
+#endif
         }
         else if((ba_3005.at(13) == 0x52)&& (ba_3005.at(14) == 0x84) && (state == 5))
         {
@@ -190,7 +207,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0)
             {
+#ifdef DBG
                 qDebug() << "Radio Id OK";
+#endif
                 sRegMsgReport.header.msgType = 1;
                 sRegMsgReport.header.payloadLength[0] = 0;
                 sRegMsgReport.header.payloadLength[1] = 24;
@@ -226,7 +245,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "rx Radio id fail " ;
+#endif
         }
         else if((ba_3005.at(13) == 0xE4)&& (ba_3005.at(14) == 0x80) && (state == 6))
         {
@@ -235,7 +256,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0)
             {
+#ifdef DBG
                 qDebug() << "Key Notification OK";
+#endif
                 msg_cnt++;
                 //Radio_Reg_State = BRD_TXT_NOTIFIC;
                 bc_txt_notific_req.packet_num[0] = msg_cnt >> 8;  // audio route rx tx  page232
@@ -248,7 +271,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "Key Notification Fail";
+#endif
         }
         else  if((ba_3005.at(13) == 0x47)&& (ba_3005.at(14) == 0x88) && (state == 7))
         {
@@ -257,7 +282,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0)
             {
+#ifdef DBG
                 qDebug() << "BRD_TXT Notification OK";
+#endif
                 msg_cnt++;
                 //Radio_Reg_State = TXT_NOTIFIC;
                 rtp_pld_req.packet_num[0] = msg_cnt >> 8;  // audio route rx tx  page232
@@ -279,7 +306,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0x00)
             {
+#ifdef DBG
                 qDebug() << "RTP Success";
+#endif
                 msg_cnt++;
                 //Radio_Reg_State = ROUTE_TX;
                 dig_audio_rx_req.packet_num[0] = msg_cnt >> 8;  // audio route rx tx  page232
@@ -301,7 +330,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0x00)
             {
+#ifdef DBG
                 qDebug() << "Rx route Success";
+#endif
                 msg_cnt++;
                 dig_audio_tx_req.packet_num[0] = msg_cnt >> 8;  // audio route rx tx  page232
                 dig_audio_tx_req.packet_num[1] = msg_cnt & 0xFF;
@@ -324,7 +355,9 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0x00)
             {
+#ifdef DBG
                 qDebug() << "Tx route Success";
+#endif
                 msg_cnt++;
                 br_cast_req.packet_num[0] = msg_cnt >> 8; // broadcast rx and tx  page80
                 br_cast_req.packet_num[1] = msg_cnt & 0xFF;
@@ -336,7 +369,9 @@ void TCP::rcv_udpRCP()
                 udpRCP_3005.flush();
             }
             else
+#ifdef DBG
                 qDebug() << "Tx route Fail";
+#endif
         }
         else if((ba_3005.at(13) == 0xC9)&& (ba_3005.at(14) == 0x80) && (state == 11))
         {
@@ -345,16 +380,20 @@ void TCP::rcv_udpRCP()
             udpRCP_3005.flush();
             if(ba_3005.at(17) == 0x00)
             {
+#ifdef DBG
                 qDebug() << "BroadCast Success";
+#endif
             }
             else {
+#ifdef DBG
                 qDebug() << "BroadCast Fail";
+#endif
             }
         }
     }
     else
     {
-        qDebug() << "rcv RCP " << ba_3005.toHex();
+        //qDebug() << "rcv RCP " << ba_3005.toHex();
         if((ba_3005.at(13) == 0x49) && (ba_3005.at(14) == 0x88))// radio disable answer
         {
             disable_online = 0;
@@ -379,7 +418,9 @@ void TCP::rcv_udpRCP()
             sCtrlReply.req_type = 0x02;
             tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
             tcp_srv.flush();
+#ifdef DBG
             qDebug() << "radio enable";
+#endif
         }
         else if ((ba_3005.at(13) == 0x34) && (ba_3005.at(14) == 0x88)) // radio enable answer
             // 02 3488 0500 0a                 6f000000 f803  rm ack fail
@@ -439,7 +480,9 @@ void TCP::rcv_udpRCP()
 
                 if(ba_3005.at(17) == 0)
                 {
+#ifdef DBG
                     qDebug() << "41B8 0";
+#endif
                     //                    memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     //                    sCallReport.callState = eCallInit;
                     //                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
@@ -456,7 +499,9 @@ void TCP::rcv_udpRCP()
             }
             else if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8))
             {
+#ifdef DBG
                 qDebug() << "43B8";
+#endif
                 if(ba_3005.at(17) == 1)// voice call
                 {
                     qDebug() << "tx 3005";
@@ -481,14 +526,19 @@ void TCP::rcv_udpRCP()
         case WAIT_STOP_CALL_REPLY:
             if((ba_3005.at(13) == 0x41) && (ba_3005.at(14) == 0x80)) // page 94
             {
+#ifdef DBG
                 qDebug() << "4180";
+#endif
                 if(ba_3005.at(17) == 0)
                 {
                     Radio_Reg_State = WAIT_STOP_CALL_HANGIN;
                     sCallStopReply.replyResult = eSucces;
                     tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
                     tcp_srv.flush();
+#ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_REPLY";
+#endif
+
                 }
                 else
                 {
@@ -499,7 +549,10 @@ void TCP::rcv_udpRCP()
         case WAIT_STOP_CALL_HANGIN:
             if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8)) // page 82
             {
+#ifdef DBG
                 qDebug() << "43B8hang";
+#endif
+
                 if(ba_3005.at(17) == 2)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(21)];
@@ -511,19 +564,18 @@ void TCP::rcv_udpRCP()
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
                     tcp_srv.flush();
                     Radio_Reg_State = WAIT_STOP_CALL_ENDED;
+#ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_HANGIN";
-                }
-                else
-                {
-
+#endif
                 }
             }
-
             break;
         case WAIT_STOP_CALL_ENDED:
             if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8)) // page 82
             {
+#ifdef DBG
                 qDebug() << "43B8end";
+#endif
                 if(ba_3005.at(17) == 3)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(21)];
@@ -535,36 +587,40 @@ void TCP::rcv_udpRCP()
                     tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
                     tcp_srv.flush();
                     Radio_Reg_State = READY;
+#ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_ENDED";
-                }
-                else
-                {
-
+#endif
+                    tx_tim.stop();
                 }
             }
-            //            else if((buf_rx[13] == 0x44)&& (buf_rx[14] == 0xB8)) // input call
-            //                    {
-            //                        if(buf_rx[17] == 1)
-            //                        {
-            //                            sCallReport.callType = CallsDecoder[buf_rx[19]];
-            //                            sCallReport.callState = eCallInit;
-            //                            sCallReport.receivedId[1] = buf_rx[23];
-            //                            sCallReport.receivedId[2] = buf_rx[22];
-            //                            sCallReport.receivedId[3] = buf_rx[21];
+            else if((ba_3005.at(13) == 0x44) && (ba_3005.at(14) == 0xB8)) // input call
+            {
+                if(ba_3005.at(17) == 1)
+                {
+                    sCallReport.callType = CallsDecoder[ba_3005.at(19)];
+                    sCallReport.callState = eCallInit;
+                    sCallReport.receivedId[1] = ba_3005.at(23);
+                    sCallReport.receivedId[2] = ba_3005.at(22);
+                    sCallReport.receivedId[3] = ba_3005.at(21);
 
-            //                            sCallReport.calledId[1] = buf_rx[27];
-            //                            sCallReport.calledId[2] = buf_rx[26];
-            //                            sCallReport.calledId[3] = buf_rx[25];
-            //                            kupol.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-            //            #ifdef DBG
-            //                            qDebug() << "voice rx";
-            //            #endif
-            //                            Radio_Reg_State = RX;
-            //                        }
-            //                    }
+                    sCallReport.calledId[1] = ba_3005.at(27);
+                    sCallReport.calledId[2] = ba_3005.at(26);
+                    sCallReport.calledId[3] = ba_3005.at(25);
+                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
+#ifdef DBG
+                    qDebug() << "voice rx";
+#endif
+                    Radio_Reg_State = RX;
+                    tx_tim.stop();
+                    rx_tim.start();
+                }
+            }
             break;
         case PTT_PRESS_AN:
+#ifdef DBG
             qDebug() << "PTT Press ";
+#endif
             memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
             memset(sCallReport.receivedId, 0, 4);
             sCallReport.callType = 1;
@@ -578,7 +634,9 @@ void TCP::rcv_udpRCP()
             memset(sCallReport.receivedId, 0, 4);
             tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
             Radio_Reg_State = READY;
+#ifdef DBG
             qDebug() << "WAIT_STOP_CALL_ENDED";
+#endif
             break;
         case WAIT_CTRL_REPLY:
             if((ba_3005.at(13) == 0x34) && (ba_3005.at(14) == 0x88)) // page 82
@@ -623,6 +681,7 @@ void TCP::rcv_udpRCP()
 
             if((ba_3005.at(13) == 0x44) && (ba_3005.at(14) == 0xB8)) // input call
             {
+                rx_tim.start();
                 if(ba_3005.at(17) == 1)
                 {
                     sCallReport.callType = CallsDecoder[ba_3005.at(19)];
@@ -633,7 +692,9 @@ void TCP::rcv_udpRCP()
                     if(ba_3005.at(19) == 4)
                     {
                         sCallReport.receivedId[3] = 222;
+#ifdef DBG
                         qDebug() << "monitor call in";
+#endif
                     }
                     else
                         sCallReport.receivedId[3] = ba_3005.at(21);
@@ -649,15 +710,19 @@ void TCP::rcv_udpRCP()
                     Radio_Reg_State = RX;
                 }
             }
-            else if((ba_3005.at(13) == 0x33) && (ba_3005.at(14) == 0x88))
+            else if((ba_3005.at(13) == 0x33) && (ba_3005.at(14) == 0x88))// CC_RadioCheckACK
             {
                 //qDebug() << ba_3005.toHex();
             }
         case RX:
             if(ba_3005.at(3) == VOICE)// page85
             {
-                qDebug() << "voice";
+#ifdef DBG
+                qDebug() << "voice ";
+#endif
+                //qDebug() << ba_3005.toHex();
                 receive_sound();
+                rx_tim.start();
             }
             else if((ba_3005.at(3) == DATA) && (ba_3005.at(13) == 0x44)&& (ba_3005.at(14) == 0xB8)) // input call HANG_TIME
             {
@@ -686,6 +751,7 @@ void TCP::rcv_udpRCP()
 #ifdef DBG
                     qDebug() << "monitor call end";
 #endif
+                    rx_tim.stop();
                     Radio_Reg_State = READY;
                 }
             }
@@ -701,6 +767,7 @@ void TCP::rcv_udpRCP()
                 tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
                 tcp_srv.flush();
                 Radio_Reg_State = RX;
+                rx_tim.start();
                 //receive_Sound();
             }
             else if((ba_3005.at(13) == 0x44)&& (ba_3005.at(14) == 0xB8)) // input call
@@ -722,6 +789,7 @@ void TCP::rcv_udpRCP()
 #ifdef DBG
                     qDebug() << "call end";
 #endif
+                    rx_tim.stop();
                     Radio_Reg_State = READY;
                 }
             }

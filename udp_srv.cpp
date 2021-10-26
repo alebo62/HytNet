@@ -23,6 +23,8 @@ quint16 seq_num;
 extern quint32 ts_current;
 extern rtp_header rtp_hdr;
 extern quint8 aud_tx[532];
+extern volatile quint16 msg_cnt;
+extern quint32          Radio_Reg_State;
 QByteArray baUdpHyt;
 quint16 len;
 quint32 timestamp;
@@ -32,44 +34,25 @@ void TCP::udp_srv_slot()
     baUdpHyt.resize(static_cast<int>(udp_srv.pendingDatagramSize()));
     udp_srv.readDatagram(baUdpHyt.data(), baUdpHyt.size());
 
-    memmove(aud_tx + 52 , baUdpHyt.data() + 28  , 480);
-    seq_num++;
-    aud_tx[14] = seq_num >> 8;
-    aud_tx[15] = seq_num & 0xFF;
-    timestamp ++;
-    aud_tx[16] = timestamp >> 24;
-    aud_tx[17] = timestamp >> 16 & 0xFF;
-    aud_tx[18] = (timestamp >> 8) & 0xFF;
-    aud_tx[19] = timestamp & 0xFF;
+    if(Radio_Reg_State == WAIT_STOP_CALL_REPLY)
+    {
+#ifdef DBG
+                    qDebug() << "sound>>";
+#endif
+        memmove(aud_tx + 52 , baUdpHyt.data() + 28  , 480);
+        seq_num++;
+        aud_tx[14] = seq_num >> 8;
+        aud_tx[15] = seq_num & 0xFF;
+        timestamp ++;
+        aud_tx[16] = timestamp >> 24;
+        aud_tx[17] = timestamp >> 16 & 0xFF;
+        aud_tx[18] = (timestamp >> 8) & 0xFF;
+        aud_tx[19] = timestamp & 0xFF;
 
-    udpRCP_3005.writeDatagram((char*)aud_tx, 532, QHostAddress(host), RCP);
-    udpRCP_3005.flush();
-
-//    memmove(aud_tx + 52 , baUdpHyt.data() + 28 + 160  , 160);
-//    seq_num++;
-//    aud_tx[14] = seq_num >> 8;
-//    aud_tx[15] = seq_num & 0xFF;
-//    timestamp ++;
-//    aud_tx[16] = timestamp >> 24;
-//    aud_tx[17] = timestamp >> 16 & 0xFF;
-//    aud_tx[18] = (timestamp >> 8) & 0xFF;
-//    aud_tx[19] = timestamp & 0xFF;
-
-//    udpRCP_3005.writeDatagram((char*)aud_tx, 212, QHostAddress(host), RCP);
-//    udpRCP_3005.flush();
-
-//    memmove(aud_tx + 52 , baUdpHyt.data() + 28 + 320 , 160);
-//    seq_num++;
-//    aud_tx[14] = seq_num >> 8;
-//    aud_tx[15] = seq_num & 0xFF;
-//    timestamp ++;
-//    aud_tx[16] = timestamp >> 24;
-//    aud_tx[17] = timestamp >> 16 & 0xFF;
-//    aud_tx[18] = (timestamp >> 8) & 0xFF;
-//    aud_tx[19] = timestamp & 0xFF;
-
-//    udpRCP_3005.writeDatagram((char*)aud_tx, 212, QHostAddress(host), RCP);
-//    udpRCP_3005.flush();
+        udpRCP_3005.writeDatagram((char*)aud_tx, 532, QHostAddress(host), RCP);
+        udpRCP_3005.flush();
+        tx_tim.start();
+    }
 }
 
 void TCP::receive_sound()
