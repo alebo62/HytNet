@@ -92,7 +92,7 @@ void msg_init()
 
     sLocMsgType_TrgRep.header.msgType = 3;
     sLocMsgType_TrgRep.header.payloadLength[0] = 0;
-    sLocMsgType_TrgRep.header.payloadLength[1] = 37+12;
+    sLocMsgType_TrgRep.header.payloadLength[1] = 37;
     memset(sLocMsgType_TrgRep.RadioId, 0, 4 );
     memset(sLocMsgType_TrgRep.RequestId, 0, 4 );
     memset(sLocMsgType_TrgRep.Result, 0, 4 );
@@ -704,6 +704,6 @@ void msg_init()
     sCtrlReply.none = 0;
     //sCtrlReply.reqid[4];
     sCtrlReply.result = 0;
-    sCtrlReply.req_type = 0;
+    //sCtrlReply.req_type = 0;
     //sCtrlReply.radio_id[4];
 }

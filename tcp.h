@@ -11,6 +11,7 @@
 
 #define DBG
 #define DBG_BA
+//#define NANOPI_H3
 
 const quint16  RRS = 3002;
 const quint16  GPS = 3003;
@@ -20,13 +21,29 @@ const quint16  TLM = 3006;
 const quint16  DTR = 3007;
 const quint16  SDM = 3009;
 
+const QString serial_num = "5883";            // white box rpi 144
+//const QString serial_num = "9dfb";            // peton
+//const QString serial_num = "0000";            // nanopi H5
+//const QString serial_num = "1abb";            // nanopi H3
+//const QString serial_num = "2c60";            //  rpi 144  2010
+//const QString serial_num = "ba37";            //  rpi 150  2004
+//const QString serial_num = "0dd7";            //  rpi 151  2012
+//const QString serial_num = "f252";            //  rpi 152  2005
+//const QString serial_num = "213a";            //  rpi 154  2007
+//const QString serial_num = "0044";            //  rpi 156  2006
+//const QString serial_num = "46de";            //  rpi 157  2008
+//const QString serial_num = "e65b";            //  rpi 158  2003
+//const QString serial_num = "212b";            //  rpi 159  2009
+//const QString serial_num = "28ea";            //  rpi 162  2011
+//const QString serial_num = "7f91";            //  rpi 161  2002
+//const QString serial_num = "227f";            //  rpi 160  2001
 
 
 class TCP : public QObject
 {
     Q_OBJECT
 public:
-    explicit TCP(QObject *parent = nullptr);
+    explicit TCP(QObject *parent = NULL);
     QTcpSocket tcp_srv;
     QUdpSocket udp_srv;
     QUdpSocket udpRRS_3002;
@@ -45,6 +62,7 @@ public:
     QTimer monitor_tim;
     QTimer rx_tim;
     QTimer tx_tim;
+    QTimer sound_tim;
 
     void prepare_udp();
     void receive_sound();
@@ -52,8 +70,8 @@ public:
     void rcv_tcpTMS();
     void rcv_tcpGPS();
     void rcv_tcpRCP();
-    double get_latitude(quint32);
-    double get_longitude(quint32);
+    float get_latitude(quint32);
+    float get_longitude(quint32);
     float get_speed(quint32);
     quint32 get_direction(quint32);
     quint8 pi_num;
@@ -82,6 +100,7 @@ public slots:
     void monitor_tim_slot();
     void rx_tim_slot();
     void tx_tim_slot();
+    void sound_tim_slot();
 
 
 };

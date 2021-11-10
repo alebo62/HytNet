@@ -28,7 +28,9 @@ void TCP::rcv_udpTMS()
 {
     ba_3004.resize(static_cast<int>(udpTMS_3004.pendingDatagramSize()));
     udpTMS_3004.readDatagram(ba_3004.data(), ba_3004.size());
+#ifdef DBG_BA
     qDebug() << "txt " << ba_3004.toHex();
+#endif
 
     msg_len = ba_3004.at(4) - 12;
 
@@ -60,9 +62,9 @@ void TCP::rcv_udpTMS()
     sTxtMsg_SimpMsg.header.payloadLength[1] = 9 + 3 + msg_len;           // ?
     memcpy(sTxtMsg_SimpMsg.Text, ba_3004.data() + 17, msg_len);
 
-//    for(int i = 0; i < msg_len + 16; i++)
-//        test.append( *((char*)&sTxtMsg_SimpMsg + i));
-//    qDebug() << test.toHex();
+    //    for(int i = 0; i < msg_len + 16; i++)
+    //        test.append( *((char*)&sTxtMsg_SimpMsg + i));
+    //    qDebug() << test.toHex();
 
     tcp_srv.write(reinterpret_cast<char*>(&sTxtMsg_SimpMsg), 4+9+3+ msg_len);// ?
     tcp_srv.flush();
@@ -88,7 +90,9 @@ void TCP::rcv_udpTMS()
 
 void TCP::rcv_tcpTMS()
 {
+#ifdef DBG_BA
     qDebug() << "txt msg " << ba.toHex();
+#endif
     switch (ba.at(4)) {
     case TmsServAvail:
         // "02 00-09 00 00 00-00-00-33 00000001"
@@ -142,9 +146,9 @@ void TCP::rcv_tcpTMS()
         txt_msg_arr[msg_len + 13 + 5] = 0x03;
         crc(txt_msg_arr , 5 + msg_len + 2 + 12);
 
-//        for(int i = 0; i < (msg_len+5+2+12); i++)
-//            test.append(txt_msg_arr[i]);
-//        qDebug() << test.toHex();
+        //        for(int i = 0; i < (msg_len+5+2+12); i++)
+        //            test.append(txt_msg_arr[i]);
+        //        qDebug() << test.toHex();
 
         udpTMS_3004.writeDatagram((char*)txt_msg_arr, msg_len + 5 + 2 +12, QHostAddress(tms_addr), TMS);
         udpTMS_3004.flush();

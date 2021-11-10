@@ -1,6 +1,7 @@
 #include "tcp.h"
 #include "messages.h"
 #include "enums.h"
+#include <cstring>
 
 extern void checksum(unsigned char*);
 extern void crc(quint8*, int);
@@ -51,7 +52,7 @@ quint32 check_online = 0;
 quint32 disable_online = 0;
 quint32 enable_online = 0;
 quint32 monitor_online = 0;
-
+quint32 start_sound;
 void TCP::rcv_tcpRCP()
 {
     if(ba.at(4) == eCallRequestMsg)//тип(4)+ резерв(5)+id_req(6..9)+calltype(10)+rcvId(11..14)
@@ -146,7 +147,7 @@ void TCP::rcv_tcpRCP()
             {
                 //sound1_timer.stop();
                 Radio_Reg_State = WAIT_STOP_CALL_REPLY;
-                //start_sound = 0;
+                start_sound = 0;
                 //sound_buff_cnt_in = 0;
                 memcpy(sCallStopReply.reqid, ba.data() + 2 + sizeof(header), 4);
                 msg_cnt++;
@@ -158,8 +159,10 @@ void TCP::rcv_tcpRCP()
                 checksum(buf_tx);
                 //returned = libusb_bulk_transfer(usb_hdl, 4, buf_tx, ptt_release_req.length[1], &act_len, 1000);
                 udpRCP_3005.writeDatagram((char*)buf_tx, ptt_release_req.length[1], QHostAddress(host), RCP);
-                //udpRCP_3005.flush();
+                udpRCP_3005.flush();
+#ifdef DBG
                 qDebug() << "send ptt release";
+#endif
             }
         }
         else // analog mode
@@ -167,7 +170,9 @@ void TCP::rcv_tcpRCP()
             memcpy(sCallStopReply.reqid, ba.data() + 2 + sizeof(header), 4);
             sCallStopReply.replyResult = eSucces;
             tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
+#ifdef DBG
             qDebug() << "WAIT_STOP_CALL_REPLY";
+#endif
             Radio_Reg_State = PTT_RELEASE_AN;
             msg_cnt++;
             ptt_release_req.packet_num[0] = msg_cnt >> 8;// page 159
@@ -180,7 +185,7 @@ void TCP::rcv_tcpRCP()
             udpRCP_3005.flush();
         }
     }
-    if (ba.at(sizeof(header)) == eChanChangeRequestMsg)
+    if ((ba.at(4) == eChanChangeRequestMsg)  && (Radio_Reg_State == READY))
     {
         memcpy(sChanChangeReply.reqid, ba.data() + 2 + sizeof(header), 4);
         zone_ch.pep.pld[2] = ba.at( 6 + sizeof(header));
@@ -196,22 +201,24 @@ void TCP::rcv_tcpRCP()
         memcpy(buf_tx + 17 + zone_ch.pep.num_of_bytes[0], reinterpret_cast<char*>(&zone_ch + 21), 2 );
         checksum(buf_tx);
         udpRCP_3005.writeDatagram((char*)buf_tx, zone_ch.length[1], QHostAddress(host), RCP);
-        udpRCP_3005.flush();
+        //udpRCP_3005.flush();
+#ifdef DBG
         qDebug() << "transmit Zone_ch";
+#endif
         Radio_Reg_State = WAIT_CH_CHANGE_REPLY;
     }
-    else if(ba.at(4) == eSuControlRequest)////тип(4)+ резерв(5)+id_req(6..9)+ReqType(10)+rcvId(11..14)
+    else if((ba.at(4) == eSuControlRequest) && (Radio_Reg_State == READY))////тип(4)+ резерв(5)+id_req(6..9)+ReqType(10)+rcvId(11..14)
     {
         memcpy(sCtrlReply.reqid, ba.data() + 6, 4);
-        memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
+        //memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
         switch (ba.at(10)) {
         case 0: // Radio Check
             if(!check_online)
             {
                 check_online = 1;
-                radio_check_tim.start();
-                memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
-                sCtrlReply.req_type = 0; // radio check
+                //radio_check_tim.start();
+                //memcpy(sCtrlReply.radio_id, ba.data() + 11, 4);
+                //sCtrlReply.req_type = 0; // radio check
                 ars_addr = dest_rrs_ip + QString::number(ba.at(12))+ "."+QString::number(ba.at(13))+"."+ QString::number(ba.at(14));
                 ars_check[6] = ba.at(12);
                 ars_check[7] = ba.at(13);
@@ -239,6 +246,19 @@ void TCP::rcv_tcpRCP()
                 checksum(buf_tx);
                 udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress(host), RCP);
                 udpRCP_3005.flush();
+
+                //                                qDebug() << "reload";
+                //                                memcpy(sReloadReplay.reqid, ba.data() + 2 + sizeof(header), 4);
+                //                                Radio_Reg_State = WAIT_RELOAD_REPLY;
+                //                                msg_cnt++;
+                //                                restart.packet_num[0] = msg_cnt >> 8; // page 230  pcm pmu  pma  0 8 0x78
+                //                                restart.packet_num[1] = msg_cnt & 0xFF;
+                //                                memcpy(buf_tx, reinterpret_cast<char*>(&restart), 17 );
+                //                                memcpy(buf_tx + 17, reinterpret_cast<char*>(restart.pep.pld), restart.pep.num_of_bytes[0]);
+                //                                memcpy(buf_tx + 17 + restart.pep.num_of_bytes[0], reinterpret_cast<char*>(&restart + 21), 2 );
+                //                                checksum(buf_tx);
+                //                                udpRCP_3005.writeDatagram((char*)buf_tx, restart.length[1], QHostAddress(host), RCP);
+                //                                udpRCP_3005.flush();
             }
             break;
         case 2: // Uninhibid
@@ -314,9 +334,9 @@ void TCP::rcv_tcpRCP()
         connect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
 
 #ifdef DBG
-        qDebug() << QDateTime::currentDateTime().toString(" yyyy-MM-dd hh:mm:ss ") << "port number: " << hyterus_port;
-#endif
+        qDebug() << QDateTime::currentDateTime().toString(" yyyy-MM-dd hh:mm:ss ") << "port number: " << hyt_udp_port;
         qDebug() << "mulaw:" << mu_law;
+#endif
         conn_state_kupol = true;
 
         //            switch (mu_law) {
@@ -343,19 +363,21 @@ void TCP::rcv_tcpRCP()
         //            udpRCP_3005.writeDatagram((char*)buf_tx, rtp_pld_req.length[1], QHostAddress(host), RCP);
         //            udpRCP_3005.flush();
     }
-    else if(ba.at(sizeof(header)) == eRldRequestMsg)
+    else if(ba.at(4) == eRldRequestMsg)
     {
+#ifdef DBG
         qDebug() << "reload";
-        //            memcpy(sReloadReplay.reqid, ba.data() + 2 + sizeof(header), 4);
-        //            Radio_Reg_State = WAIT_RELOAD_REPLY;
-        //            msg_cnt++;
-        //            restart.packet_num[0] = msg_cnt >> 8; // page 230  pcm pmu  pma  0 8 0x78
-        //            restart.packet_num[1] = msg_cnt & 0xFF;
-        //            memcpy(buf_tx, reinterpret_cast<char*>(&restart), 17 );
-        //            //memcpy(buf_tx + 17, reinterpret_cast<char*>(restart.pep.pld), restart.pep.num_of_bytes[0]);
-        //            memcpy(buf_tx + 17 + restart.pep.num_of_bytes[0], reinterpret_cast<char*>(&restart + 21), 2 );
-        //            checksum(buf_tx);
-        //            udpRCP_3005.writeDatagram((char*)buf_tx, restart.length[1], QHostAddress(host), RCP);
-        //            udpRCP_3005.flush();
+#endif
+        memcpy(sReloadReplay.reqid, ba.data() + 2 + sizeof(header), 4);
+        Radio_Reg_State = WAIT_RELOAD_REPLY;
+        msg_cnt++;
+        restart.packet_num[0] = msg_cnt >> 8; // page 230  pcm pmu  pma  0 8 0x78
+        restart.packet_num[1] = msg_cnt & 0xFF;
+        memcpy(buf_tx, reinterpret_cast<char*>(&restart), 17 );
+        memcpy(buf_tx + 17, reinterpret_cast<char*>(restart.pep.pld), restart.pep.num_of_bytes[0]);
+        memcpy(buf_tx + 17 + restart.pep.num_of_bytes[0], reinterpret_cast<char*>(&restart + 21), 2 );
+        checksum(buf_tx);
+        udpRCP_3005.writeDatagram((char*)buf_tx, restart.length[1], QHostAddress(host), RCP);
+        udpRCP_3005.flush();
     }
 }

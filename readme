@@ -1,12 +1,19 @@
-1. При мониторинге станции не воспроизводится звук
-2. Широта и долгота не декодируются. Как у них сделан декодер? Сколько байтов отведено под ш. и д.
-3. Станция остается с надписью ОТКЛЮЧЕНА после ее разблокирования.
-
 
 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   token  monoblock
 
 /etc/profile
 
+sudo apt-get install libqt5-*
+
+libwiringpi.so(4files)  see Dell/Documents/Shared_2/WiringNP
 
 355 443 892 NNserver
 554 065 004 Arm
+
+192.168.11.3  Raduga Server
+
+
+ctr tcp: "01000b000e0000000064000000006f" 1
+rrs  "14001100070000006f000200a903"
+rrs  "11008200050a00006f013103"
+radio check ok

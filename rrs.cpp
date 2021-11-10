@@ -27,7 +27,9 @@ void TCP::rcv_udpRRS()
 {
     ba_3002.resize(static_cast<int>(udpRRS_3002.pendingDatagramSize()));
     udpRRS_3002.readDatagram(ba_3002.data(), ba_3002.size());
+#ifdef DBG_BA
     qDebug() << "rrs " << ba_3002.toHex();
+#endif
 
     switch (ba_3002.at(0)) {
     case 0x11:// RRS
@@ -53,18 +55,23 @@ void TCP::rcv_udpRRS()
             memmove(tcp_tx.data(), &sARSmsg, sizeof(sARSmsg));
             if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
                 tcp_srv.write(tcp_tx, sizeof(sARSmsg));
+
             break;
         case OnLineCheckAckRrs:  // RadioIP[4]+Result[1]
             if(check_online)
             {
                 radio_check_tim.stop();
                 check_online = 0;
-                sCtrlReply.result = 0; // success
+                sCtrlReply.result = 0;  // success
                 sCtrlReply.req_type = 0;// radio check
                 radio_check_tim.stop();
-                tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
-                tcp_srv.flush();
-                qDebug() << "radio check ok";
+                if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                {
+                    tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
+                }
+#ifdef DBG
+                qDebug() << "radio check ok!";
+#endif
             }
             else
             {
@@ -75,10 +82,10 @@ void TCP::rcv_udpRRS()
                 sARSmsg.arsMsgType = RegAck;
                 sARSmsg.csbk = 0;
                 memcpy(sARSmsg.req_id, req_id, 4);
-                tcp_tx.resize(sizeof(sARSmsg));
-                memmove(tcp_tx.data(), &sARSmsg, sizeof(sARSmsg));
                 if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
-                    tcp_srv.write(tcp_tx, sizeof(sARSmsg));
+                {
+                    tcp_srv.write((char*)&sARSmsg, sizeof(sARSmsg));
+                }
             }
             break;
         default:
@@ -88,8 +95,12 @@ void TCP::rcv_udpRRS()
     case 0x14:// DDS
         switch (ba_3002.at(2)) {
         case 0x11 :// RRS
-            //            if(check_online)
-            //            {
+                        if(check_online)
+                        {
+                            radio_check_tim.start();
+#ifdef DBG
+                qDebug() << "start check timer!";
+#endif
             //                radio_check_tim.stop();
             //                check_online = 0;
             //                sCtrlReply.result = 0; // success
@@ -101,7 +112,7 @@ void TCP::rcv_udpRRS()
             //            // address 6..8
             //            // opcode 9,10
             //            // result 11
-            //            }
+                        }
             break;
         case 0x07 :// LP
 
@@ -158,7 +169,9 @@ void TCP::rcv_tcpRRS()
         udpRRS_3002.flush();
         break;
     default:
+#ifdef DBG
         qDebug() << "Unknown rrs ";
+#endif
         break;
     }
 }

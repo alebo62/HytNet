@@ -25,6 +25,7 @@ extern rtp_header rtp_hdr;
 extern quint8 aud_tx[532];
 extern volatile quint16 msg_cnt;
 extern quint32          Radio_Reg_State;
+extern quint32 start_sound;
 QByteArray baUdpHyt;
 quint16 len;
 quint32 timestamp;
@@ -33,8 +34,8 @@ void TCP::udp_srv_slot()
 {
     baUdpHyt.resize(static_cast<int>(udp_srv.pendingDatagramSize()));
     udp_srv.readDatagram(baUdpHyt.data(), baUdpHyt.size());
-
-    if(Radio_Reg_State == WAIT_STOP_CALL_REPLY)
+    //qDebug() << start_sound;
+    if(start_sound)
     {
 #ifdef DBG
                     qDebug() << "sound>>";
@@ -50,7 +51,7 @@ void TCP::udp_srv_slot()
         aud_tx[19] = timestamp & 0xFF;
 
         udpRCP_3005.writeDatagram((char*)aud_tx, 532, QHostAddress(host), RCP);
-        udpRCP_3005.flush();
+        //udpRCP_3005.flush();
         tx_tim.start();
     }
 }
@@ -62,13 +63,10 @@ void TCP::receive_sound()
     seq_num++;
     rtp_hdr.seq_no[0] = seq_num >> 8;
     rtp_hdr.seq_no[1] = seq_num & 0xff;
-
     memcpy(temp_8 ,reinterpret_cast<quint8*>(&rtp_hdr), RTP_HDR_LEN );
-    memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52, 480 );
-
-    udp_srv.writeDatagram( reinterpret_cast<char*>(temp_8), 480 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
+    memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52, 160 );
+    udp_srv.writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
     udp_srv.flush();
-
-
+    sound_tim.start(); // 15msec timer
 }
 

@@ -39,7 +39,9 @@ void TCP::rcv_udpTLM()
 {
     ba_3006.resize(static_cast<int>(udpTLM_3006.pendingDatagramSize()));
     udpTLM_3006.readDatagram(ba_3006.data(), ba_3006.size());
+#ifdef DBG
     qDebug() << "telemetria";
+#endif
 }
 
 QByteArray ba_3007;
@@ -47,7 +49,9 @@ void TCP::rcv_udpDTR()
 {
     ba_3007.resize(static_cast<int>(udpDTR_3007.pendingDatagramSize()));
     udpDTR_3007.readDatagram(ba_3007.data(), ba_3007.size());
+#ifdef DBG
     qDebug() << "data";
+#endif
 }
 
 QByteArray ba_3009;
@@ -55,5 +59,8 @@ void TCP::rcv_udpSDM()
 {
     ba_3009.resize(static_cast<int>(udpSDM_3009.pendingDatagramSize()));
     udpSDM_3009.readDatagram(ba_3009.data(), ba_3009.size());
+#ifdef DBG
     qDebug() << "self def message";
+#endif
+
 }

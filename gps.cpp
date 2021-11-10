@@ -55,8 +55,8 @@ void TCP::rcv_tcpGPS()
         memcpy(std_loc_imm_req+10, ba.data() + 6, 3); // reqid
         crc(std_loc_imm_req,15);
         udpGPS_3003.writeDatagram((char*)std_loc_imm_req, 15, QHostAddress(gps_addr), GPS);
-        udpGPS_3003.flush();
-        qDebug();
+        //udpGPS_3003.flush();
+        //qDebug();
         break;
     case TrigLocaRequest: // u16 interval – инт между отчетами + bool UseCsbk – исп. CSBK при передаче
 
@@ -124,7 +124,9 @@ void TCP::rcv_udpGPS()
 {
     ba_3003.resize(static_cast<int>(udpGPS_3003.pendingDatagramSize()));
     udpGPS_3003.readDatagram(ba_3003.data(), ba_3003.size());
+#ifdef DBG_BA
     qDebug() << ba_3003.toHex();
+#endif
     switch (ba_3003.at(1)) {
     case StdLocImmReport:
         switch (ba_3003.at(2)) {
@@ -134,13 +136,9 @@ void TCP::rcv_udpGPS()
             memcpy(&sLocMsgType_TrgRep.RadioId[1], ba_3003.data() + 10, 3);
             sLocMsgType_TrgRep.Result[3] = ba_3003.at(14);
             result = get_latitude(ba_3003.at(4) - 21);
-            qDebug() << result;
-            memcpy((char*)sLocMsgType_TrgRep.Latitude, (char*)&result , 8);
-            memcpy((char*)&result ,(char*)sLocMsgType_TrgRep.Latitude,  8);
-            qDebug() << result;
+            memcpy((char*)sLocMsgType_TrgRep.Latitude, (char*)&result , 4);
             result = get_longitude(ba_3003.at(4) - 21);
-            qDebug() << result;
-            memcpy(sLocMsgType_TrgRep.Longitude, (char*)&result, 8);
+            memcpy(sLocMsgType_TrgRep.Longitude, (char*)&result, 4);
             result = get_speed(ba_3003.at(4) - 21);
             memcpy(sLocMsgType_TrgRep.Speed, (char*)&result, 4);
             result = get_direction(ba_3003.at(4) - 21);
@@ -152,10 +150,14 @@ void TCP::rcv_udpGPS()
             //qDebug() << "gps immed 02";
             break;
         case 0x03: // RequestID[4]+RadioIP[4] + Result[2]+GPSData[40]+RSSIValue[2]
+#ifdef DBG
             qDebug() << "gps immed 03";
+#endif
             break;
         case 0x04:// RadioIP[4]+EmegencyType[1]+DataType[1]+Data[n]
+#ifdef DBG
             qDebug() << "gps immed 04";
+#endif
             break;
         }
 
@@ -182,19 +184,17 @@ void TCP::rcv_udpGPS()
 
             break;
         case 0x03:  // RequestID[4](5..8)+RadioIP[4](9..12) + TimeRemaining[8](13...20) + GPSData[40](21... 60 )
-            if(ba_3003.at(21) == 'A')
+            if(ba_3003.at(21) == 'A')// 0x41
                 sLocMsgType_TrgRep.Result[3] = 0;
             else
                 sLocMsgType_TrgRep.Result[3] = 1;
-             sLocMsgType_TrgRep.LocMsgType = 0x05;// triggered report
+            sLocMsgType_TrgRep.LocMsgType = 0x05;// triggered report
             memcpy(sLocMsgType_TrgRep.RequestId, ba_3003.data() + 5, 4);
             memcpy(&sLocMsgType_TrgRep.RadioId[1], ba_3003.data() + 10, 3);
             result = get_latitude(ba_3003.at(4) - 21);
-            qDebug() << result;
-            memcpy(sLocMsgType_TrgRep.Latitude, (char*)&result, 8);
+            memcpy((char*)sLocMsgType_TrgRep.Latitude, (char*)&result, 4);
             result = get_longitude(ba_3003.at(4) - 21);
-            qDebug() << result;
-            memcpy((char*)&sLocMsgType_TrgRep.Latitude, (char*)&result , 8);
+            memcpy((char*)sLocMsgType_TrgRep.Longitude, (char*)&result , 4);
             //memcpy(sLocMsgType_TrgRep.Longitude, (char*)&result, 4);
             result = get_speed(ba_3003.at(4) - 21);
             memcpy(sLocMsgType_TrgRep.Speed, (char*)&result, 4);
@@ -202,7 +202,6 @@ void TCP::rcv_udpGPS()
             memcpy(sLocMsgType_TrgRep.Heading, (char*)&result, 4);
             tcp_srv.write((char*)&sLocMsgType_TrgRep, sizeof(sLocMsgType_TrgRep));
             tcp_srv.flush();
-            qDebug() << "gps rcv";
             break;
         case 0x05://  RequestID[4]+RadioIP[4] + Result[2]
 
@@ -249,24 +248,24 @@ void TCP::rcv_udpGPS()
     }
 }
 
-double TCP::get_latitude(quint32 x)
+float TCP::get_latitude(quint32 x)
 {
     double result = 0.0;
     quint32 lat=(ba_3003.at(x)- 0x30)*10 + (ba_3003.at(x+1) - 0x30);//  celaya chast gradusov
     quint32 y = (ba_3003.at(x+2)- 0x30)*10 + (ba_3003.at(x+3) - 0x30);//  celaya chast minut
     quint32 z = (ba_3003.at(x+5)- 0x30)*1000 + (ba_3003.at(x+6)- 0x30)*100 + (ba_3003.at(x+7)- 0x30)*10 + (ba_3003.at(x+8) - 0x30);
     double min = ((double)y + ((double)z / 10000.0)) / 60.0;
-    return (result = (double)lat + min);
+    return result = ((double)lat + min);
 }
 
-double TCP::get_longitude(quint32 x)
+float TCP::get_longitude(quint32 x)
 {
     double result = 0.0;
     quint32 lon = (ba_3003.at(x+10)- 0x30)*100 + (ba_3003.at(x+11) - 0x30)*10 + (ba_3003.at(x+12) - 0x30);//  celaya chast gradusov
     quint32 y = (ba_3003.at(x+13)- 0x30)*10 +  (ba_3003.at(x+14) - 0x30);//  celaya chast minut
     quint32 z = (ba_3003.at(x+16)- 0x30)*1000 +(ba_3003.at(x+17) - 0x30)*100 + (ba_3003.at(x+18)- 0x30)*10 + (ba_3003.at(x+19) - 0x30);
     double min = ((double)y + ((double)z / 10000.0)) / 60.0;
-    return (result = (double)lon + min);
+    return result = ((double)lon + min);
 }
 
 float TCP::get_speed(quint32 x)

@@ -21,6 +21,7 @@ TCP::TCP(QObject *parent) : QObject(parent)
     connect(&monitor_tim,   SIGNAL(timeout()), this, SLOT(monitor_tim_slot()));
     connect(&rx_tim,   SIGNAL(timeout()), this, SLOT(rx_tim_slot()));
     connect(&tx_tim,   SIGNAL(timeout()), this, SLOT(tx_tim_slot()));
+    connect(&sound_tim,   SIGNAL(timeout()), this, SLOT(sound_tim_slot()));
 
     connect(&tcp_srv,SIGNAL(readyRead()),this,SLOT(tcp_receive()));
     connect(&tcp_srv,SIGNAL(disconnected()),this,SLOT(tcp_disconn()));
@@ -33,10 +34,11 @@ TCP::TCP(QObject *parent) : QObject(parent)
     udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
     tcp_conn_tim.setInterval(3000);
     ping_tim.setInterval(11000);
-    reload_tim.setInterval(10000);
-    radio_check_tim.setInterval(2500);
+    reload_tim.setInterval(1000);
+    radio_check_tim.setInterval(2000);
     rx_tim.setInterval(5000);
     tx_tim.setInterval(5000);
+    sound_tim.setInterval(15);
 
     //qDebug()<< dest_rrs;
 }

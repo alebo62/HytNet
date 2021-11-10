@@ -34,6 +34,7 @@ extern strCRp           sCallReply;
 extern strRMRpt         sRegMsgReport;
 extern strMsgType_Ping  sMsgType_Ping;
 extern hrnp_t           zone_ch;
+extern quint16          hyt_udp_port;
 
 QByteArray  ba;
 bool        conn_state_kupol;
@@ -51,29 +52,37 @@ void TCP::tcp_receive()
 
     switch (ba.at(0)) {
     case 4: // ping message
-        //qDebug() << "ping send";
+        ping_counter = 0;
         tcp_srv.write(reinterpret_cast<char*>(&sMsgType_Ping), sizeof(sMsgType_Ping));
         break;
     case 1: // control messages
-        qDebug() << "tcp:" << ba.toHex() << Radio_Reg_State;
+#ifdef DBG
+        qDebug() << "ctr tcp:" << ba.toHex() << Radio_Reg_State;
+#endif
         rcv_tcpRCP();
         break;
     case 3: // location messages
-        qDebug() << "tcp:" << ba.toHex();
+#ifdef DBG
+            qDebug() << "loc tcp:" << ba.toHex();
+#endif
         if(Radio_Reg_State == READY)
         {
             rcv_tcpGPS();
         }
         break;
-    case 0: // rrs messages
-        qDebug() << "tcp:" << ba.toHex();
+    case 0: // rrs messages        
+#ifdef DBG
+      qDebug() << "rrs tcp:" << ba.toHex();
+#endif
         if(Radio_Reg_State == READY)
         {
             rcv_tcpRRS();
         }
         break;
     case 2: // text messages
-        qDebug() << "tcp:" << ba.toHex();
+#ifdef DBG
+      qDebug() << "txt tcp:" << ba.toHex();
+#endif
         if(Radio_Reg_State == READY)
         {
             rcv_tcpTMS();
@@ -86,12 +95,16 @@ void TCP::tcp_receive()
 
 void TCP::tcp_conn()
 {
-    qDebug() << "connect";
+#ifdef DBG
+      qDebug() << "connect";
+#endif
     tcp_tx.resize(sizeof(sMRRpt));
     memmove(tcp_tx.data(), &sMRRpt, sizeof(sMRRpt));
     tcp_srv.write(tcp_tx, sizeof(sMRRpt));
     tcp_srv.flush();
-    qDebug() << "MRRpt send";
+#ifdef DBG
+      qDebug() << "MRRpt send";
+#endif
 
 }
 
@@ -101,6 +114,12 @@ void TCP::tcp_disconn()
     tcp_srv.abort();
     disconnect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
     tcp_conn_tim.start();
+    ping_counter = 0;
+    hyt_udp_port = 0;
+#ifdef DBG
+      qDebug() << "disconn tcp";
+#endif
+
 }
 
 
