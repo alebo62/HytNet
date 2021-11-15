@@ -32,8 +32,8 @@ quint32 timestamp;
 
 void TCP::udp_srv_slot()
 {
-    baUdpHyt.resize(static_cast<int>(udp_srv.pendingDatagramSize()));
-    udp_srv.readDatagram(baUdpHyt.data(), baUdpHyt.size());
+    baUdpHyt.resize(static_cast<int>(udp_srv->pendingDatagramSize()));
+    udp_srv->readDatagram(baUdpHyt.data(), baUdpHyt.size());
     //qDebug() << start_sound;
     if(start_sound)
     {
@@ -65,8 +65,8 @@ void TCP::receive_sound()
     rtp_hdr.seq_no[1] = seq_num & 0xff;
     memcpy(temp_8 ,reinterpret_cast<quint8*>(&rtp_hdr), RTP_HDR_LEN );
     memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52, 160 );
-    udp_srv.writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
-    udp_srv.flush();
+    udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
+    udp_srv->flush();
     sound_tim.start(); // 15msec timer
 }
 

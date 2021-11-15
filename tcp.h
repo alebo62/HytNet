@@ -36,7 +36,7 @@ const QString serial_num = "5883";            // white box rpi 144
 //const QString serial_num = "212b";            //  rpi 159  2009
 //const QString serial_num = "28ea";            //  rpi 162  2011
 //const QString serial_num = "7f91";            //  rpi 161  2002
-//const QString serial_num = "227f";            //  rpi 160  2001
+//const QString serial_num = "227f";            //  rpi 160(231)  2001
 
 
 class TCP : public QObject
@@ -45,7 +45,7 @@ class TCP : public QObject
 public:
     explicit TCP(QObject *parent = NULL);
     QTcpSocket tcp_srv;
-    QUdpSocket udp_srv;
+    QUdpSocket *udp_srv;
     QUdpSocket udpRRS_3002;
     QUdpSocket udpGPS_3003;
     QUdpSocket udpTMS_3004;

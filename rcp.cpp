@@ -246,19 +246,6 @@ void TCP::rcv_tcpRCP()
                 checksum(buf_tx);
                 udpRCP_3005.writeDatagram((char*)buf_tx, radio_en_dis.length[1], QHostAddress(host), RCP);
                 udpRCP_3005.flush();
-
-                //                                qDebug() << "reload";
-                //                                memcpy(sReloadReplay.reqid, ba.data() + 2 + sizeof(header), 4);
-                //                                Radio_Reg_State = WAIT_RELOAD_REPLY;
-                //                                msg_cnt++;
-                //                                restart.packet_num[0] = msg_cnt >> 8; // page 230  pcm pmu  pma  0 8 0x78
-                //                                restart.packet_num[1] = msg_cnt & 0xFF;
-                //                                memcpy(buf_tx, reinterpret_cast<char*>(&restart), 17 );
-                //                                memcpy(buf_tx + 17, reinterpret_cast<char*>(restart.pep.pld), restart.pep.num_of_bytes[0]);
-                //                                memcpy(buf_tx + 17 + restart.pep.num_of_bytes[0], reinterpret_cast<char*>(&restart + 21), 2 );
-                //                                checksum(buf_tx);
-                //                                udpRCP_3005.writeDatagram((char*)buf_tx, restart.length[1], QHostAddress(host), RCP);
-                //                                udpRCP_3005.flush();
             }
             break;
         case 2: // Uninhibid
@@ -326,12 +313,13 @@ void TCP::rcv_tcpRCP()
     else if(ba.at(sizeof(header)) == eUdpPortNotification)
     {
         hyt_udp_port = static_cast<quint16>(static_cast<quint32>( ba.at(8 + sizeof(header))) * 256 + static_cast<quint32>(ba.at(9 + sizeof(header))));
-        udp_srv.bind(hyt_udp_port);
+        udp_srv = new QUdpSocket(this);
+        udp_srv->bind(hyt_udp_port );
 #ifdef RTP
         mu_law = (ba.at(13 + sizeof(header)));
         rtp_hdr.payload_type = mu_law;
 #endif
-        connect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
+        connect(udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
 
 #ifdef DBG
         qDebug() << QDateTime::currentDateTime().toString(" yyyy-MM-dd hh:mm:ss ") << "port number: " << hyt_udp_port;

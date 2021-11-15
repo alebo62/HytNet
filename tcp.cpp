@@ -13,6 +13,8 @@ TCP::TCP(QObject *parent) : QObject(parent)
     route_rpi();
     prepare_udp();
     msg_init();
+    udp_srv = nullptr;
+    //connect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
     connect(&rad_conn_tim, SIGNAL(timeout()), this, SLOT(rad_conn_tim_slot()));
     connect(&tcp_conn_tim, SIGNAL(timeout()), this, SLOT(tcp_conn_tim_slot()));
     connect(&ping_tim,     SIGNAL(timeout()), this, SLOT(ping_tim_slot()));

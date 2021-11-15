@@ -2,6 +2,7 @@
 #include "messages.h"
 //#include <string>
 #include "enums.h"
+#include <QtEndian>
 volatile quint16 msg_cnt = 0;
 quint32 state = 0;
 unsigned char ack[] =    {0x7e,3,0,0x10,0x20,0x10,0,0,0,0x0C,0x60,0x00};
@@ -52,6 +53,7 @@ extern quint32 monitor_online;
 quint8 CallsDecoder[] = {3,1,5,2,4,6};
 extern void receive_sound();
 extern quint32 start_sound;
+extern quint32 virt_hadrr;
 QByteArray ba_3005;
 
 void TCP::rcv_udpRCP()
@@ -142,16 +144,16 @@ void TCP::rcv_udpRCP()
 #ifdef DBG
                 qDebug() << "S/N OK";  //  8digits 45020005+00
 #endif
-                //Radio_Reg_State = SER_NUM;
-                for(int i = 0; i < 10; i++){
-                    sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
+        //        Radio_Reg_State = SER_NUM;
+//                for(int i = 0; i < 10; i++){
+//                    sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
 
-                    //qDebug() << sRegMsgReport.ser_num[i];
-                }
-                //memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
-                //for(int i = 0; i < 8; i++)
-                //    sRegMsgReport.ser_num[9-i] = static_cast<unsigned char>(ba_3005.at(25 + (i << 1)));//  but len == 64
-                //sRegMsgReport.ser_num[0] = sRegMsgReport.ser_num[1] = 0x30;
+//                    //qDebug() << sRegMsgReport.ser_num[i];
+//                }
+//                memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
+                for(int i = 0; i < 8; i++)
+                    sRegMsgReport.ser_num[9-i] = static_cast<unsigned char>(ba_3005.at(25 + (i << 1)));//  but len == 64
+                sRegMsgReport.ser_num[0] = sRegMsgReport.ser_num[1] = 0x30;
                 msg_cnt++;
                 chan_status.packet_num[0] = msg_cnt >> 8; // page 103
                 chan_status.packet_num[1] = msg_cnt & 0xFF;
@@ -225,11 +227,19 @@ void TCP::rcv_udpRCP()
                 sRegMsgReport.len[0] = 0;
                 sRegMsgReport.len[1] = 10;
 
-                sRegMsgReport.radio_id[3] = static_cast<unsigned char>(ba_3005.at(19));
-                sRegMsgReport.radio_id[2] = static_cast<unsigned char>(ba_3005.at(20));
-                sRegMsgReport.radio_id[1] = static_cast<unsigned char>(ba_3005.at(21));
-                sRegMsgReport.radio_id[0] = static_cast<unsigned char>(ba_3005.at(22));
+                if(virt_hadrr)
+                {
+                    virt_hadrr = qToBigEndian(virt_hadrr);
+                    memcpy(sRegMsgReport.radio_id, (char*)&virt_hadrr, 4);
 
+                }
+                else
+                {
+                    sRegMsgReport.radio_id[3] = static_cast<unsigned char>(ba_3005.at(19));
+                    sRegMsgReport.radio_id[2] = static_cast<unsigned char>(ba_3005.at(20));
+                    sRegMsgReport.radio_id[1] = static_cast<unsigned char>(ba_3005.at(21));
+                    sRegMsgReport.radio_id[0] = static_cast<unsigned char>(ba_3005.at(22));
+                }
                 sRegMsgReport.reg_unreg_state = REGISTRATE;
 
                 tcp_conn_tim.start();
@@ -719,16 +729,18 @@ void TCP::rcv_udpRCP()
         case READY:
 
             if((ba_3005.at(13) == 0x44) && (ba_3005.at(14) == 0xB8)) // input call
-            {
+            {  //  44b8 0c00 0100 0000 00ff0000 72000000 b803
+               //            17   19   21       25
                 rx_tim.start();
-                if(ba_3005.at(17) == 1)
+                if(ba_3005.at(17) == 1) //  VoiceRX
                 {
-                    sCallReport.callType = CallsDecoder[ba_3005.at(19)];
+                    sCallReport.callType = CallsDecoder[ba_3005.at(19)];// Call Type
                     sCallReport.callState = eCallInit;
 
                     sCallReport.receivedId[1] = ba_3005.at(23);
                     sCallReport.receivedId[2] = ba_3005.at(22);
-                    if(ba_3005.at(19) == 4)
+
+                    if(ba_3005.at(19) == 4)// !!!!!!!!!!!!!!!!!!!
                     {
                         sCallReport.receivedId[3] = 222;
 #ifdef DBG

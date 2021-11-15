@@ -83,7 +83,6 @@ void TCP::ping_tim_slot()
 void TCP::reload_tim_slot()
 {
     reload_tim.stop();
-
 //    state = 0;
 //    udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
 //    Radio_Reg_State = INIT_STATE;
@@ -177,8 +176,8 @@ void TCP::sound_tim_slot()
     rtp_hdr.seq_no[1] = seq_num & 0xff;
     memcpy(temp_8 ,reinterpret_cast<quint8*>(&rtp_hdr), RTP_HDR_LEN );
     memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52 + 160 * sound_tim_counter, 160 );
-    udp_srv.writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
-    udp_srv.flush();
+    udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
+    udp_srv->flush();
 
     if(sound_tim_counter == 2)
     {

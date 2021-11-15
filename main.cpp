@@ -5,13 +5,14 @@
 extern QString hadrr;
 extern QString host;
 QString str;
+quint32 virt_hadrr;
 static quint32 radio_id;
 
 
 
 int main(int argc, char *argv[])
 {
-    if(argc == 3)
+    if(argc >= 3)
     {
         hadrr = QString(argv[1]);
         radio_id =  QString(argv[2]).toUInt();
@@ -22,6 +23,17 @@ int main(int argc, char *argv[])
         host.append(str).append(".");
         str.setNum (radio_id & 0xFF);
         host.append(str);
+    }
+    if(argc == 4)
+    {
+        virt_hadrr =  QString(argv[3]).toUInt();
+
+//        str.setNum (radio_id >> 16);
+//        host.append(str).append(".");
+//        str.setNum ((radio_id >> 8) & 0xFF);
+//        host.append(str).append(".");
+//        str.setNum (radio_id & 0xFF);
+//        host.append(str);
     }
     QCoreApplication a(argc, argv);
     TCP tcp;

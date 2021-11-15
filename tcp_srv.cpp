@@ -111,8 +111,10 @@ void TCP::tcp_conn()
 void TCP::tcp_disconn()
 {
     ping_tim.stop();
-    tcp_srv.abort();
-    disconnect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
+    if(udp_srv)
+        delete  udp_srv;
+    //tcp_srv.abort();
+    //disconnect(&udp_srv, SIGNAL(readyRead()),this, SLOT(udp_srv_slot()));
     tcp_conn_tim.start();
     ping_counter = 0;
     hyt_udp_port = 0;
