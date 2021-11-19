@@ -144,13 +144,13 @@ void TCP::rcv_udpRCP()
 #ifdef DBG
                 qDebug() << "S/N OK";  //  8digits 45020005+00
 #endif
-        //        Radio_Reg_State = SER_NUM;
-//                for(int i = 0; i < 10; i++){
-//                    sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
+                //        Radio_Reg_State = SER_NUM;
+                //                for(int i = 0; i < 10; i++){
+                //                    sRegMsgReport.ser_num[i] = *(sn+9-i);// reverse string
 
-//                    //qDebug() << sRegMsgReport.ser_num[i];
-//                }
-//                memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
+                //                    //qDebug() << sRegMsgReport.ser_num[i];
+                //                }
+                //                memcpy(&sRegMsgReport.ser_num, "511TPH2798", 10 );
                 for(int i = 0; i < 8; i++)
                     sRegMsgReport.ser_num[9-i] = static_cast<unsigned char>(ba_3005.at(25 + (i << 1)));//  but len == 64
                 sRegMsgReport.ser_num[0] = sRegMsgReport.ser_num[1] = 0x30;
@@ -431,8 +431,11 @@ void TCP::rcv_udpRCP()
             sCtrlReply.radio_id[3] = ba_3005.at(18);
             sCtrlReply.result =  ba_3005.at(17);
             sCtrlReply.req_type = 0x01;
-            tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
-            tcp_srv.flush();
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
+                tcp_srv.flush();
+            }
 #ifdef DBG
             qDebug() << "radio disable:" << sCtrlReply.result;
 #endif
@@ -446,8 +449,11 @@ void TCP::rcv_udpRCP()
             sCtrlReply.radio_id[3] = ba_3005.at(18);
             sCtrlReply.result =  ba_3005.at(17);
             sCtrlReply.req_type = 0x02;
-            tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
-            tcp_srv.flush();
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
+                tcp_srv.flush();
+            }
 #ifdef DBG
             qDebug() << "radio enable:" << sCtrlReply.result;
 #endif
@@ -462,8 +468,10 @@ void TCP::rcv_udpRCP()
             sCtrlReply.radio_id[1] = ba_3005.at(20);
             sCtrlReply.radio_id[2] = ba_3005.at(19);
             sCtrlReply.radio_id[3] = ba_3005.at(18);
+
             monitor_tim.stop();
-            if(ba_3005.at(17)){
+            if(ba_3005.at(17))
+            {
                 sCtrlReply.result = 1;
 #ifdef DBG
                 qDebug() << "monitor online fail";
@@ -476,8 +484,11 @@ void TCP::rcv_udpRCP()
 #endif
             }
             sCtrlReply.req_type = 0x03;
-            tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
-            tcp_srv.flush();
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
+                tcp_srv.flush();
+            }
         }
         switch (Radio_Reg_State)
         {
@@ -503,8 +514,11 @@ void TCP::rcv_udpRCP()
                 {
                     sCallReply.requestResult = eFailure;
                     Radio_Reg_State = READY;// a если был прием???
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReply), sizeof(sCallReply));
+                        tcp_srv.flush();
+                    }
                 }
             }
             break;
@@ -529,8 +543,11 @@ void TCP::rcv_udpRCP()
                     Radio_Reg_State = READY;
                     sCallReport.callState = eCallEnded;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                 }
             }
             else if((ba_3005.at(13) == 0x43) && (ba_3005.at(14) == 0xB8))
@@ -547,8 +564,11 @@ void TCP::rcv_udpRCP()
                     Radio_Reg_State = WAIT_STOP_CALL_REPLY;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
                     sCallReport.callState = eCallInit;
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                 }
                 else
                 {
@@ -558,8 +578,11 @@ void TCP::rcv_udpRCP()
                     Radio_Reg_State = READY;
                     sCallReport.callState = eCallEnded;
                     memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);// its my id
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                 }
             }
             break;
@@ -574,8 +597,11 @@ void TCP::rcv_udpRCP()
                 {
                     Radio_Reg_State = WAIT_STOP_CALL_HANGIN;
                     sCallStopReply.replyResult = eSucces;
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_REPLY";
 #endif
@@ -585,8 +611,11 @@ void TCP::rcv_udpRCP()
                 {
                     Radio_Reg_State = WAIT_STOP_CALL_HANGIN;
                     sCallStopReply.replyResult = eFailure;
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallStopReply), sizeof(sCallStopReply));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_REPLY Fail --> Ready";
 #endif
@@ -608,8 +637,11 @@ void TCP::rcv_udpRCP()
                     sCallReport.receivedId[3] = ba_3005.at(23);
                     sCallReport.receivedId[2] = ba_3005.at(24);
                     sCallReport.receivedId[1] = ba_3005.at(25);
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                     Radio_Reg_State = WAIT_STOP_CALL_ENDED;
 #ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_HANGIN";
@@ -631,8 +663,11 @@ void TCP::rcv_udpRCP()
                     sCallReport.receivedId[3] = ba_3005.at(23);
                     sCallReport.receivedId[2] = ba_3005.at(24);
                     sCallReport.receivedId[1] = ba_3005.at(25);
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                     Radio_Reg_State = READY;
 #ifdef DBG
                     qDebug() << "WAIT_STOP_CALL_ENDED";
@@ -653,8 +688,11 @@ void TCP::rcv_udpRCP()
                     sCallReport.calledId[1] = ba_3005.at(27);
                     sCallReport.calledId[2] = ba_3005.at(26);
                     sCallReport.calledId[3] = ba_3005.at(25);
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "voice rx";
 #endif
@@ -672,14 +710,20 @@ void TCP::rcv_udpRCP()
             memset(sCallReport.receivedId, 0, 4);
             sCallReport.callType = 1;
             sCallReport.callState = eCallInit;
-            tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+            }
             break;
         case PTT_RELEASE_AN:
             sCallReport.callType = 1;
             sCallReport.callState = eCallEnded;
             memcpy( sCallReport.calledId, sRegMsgReport.radio_id , 4);
             memset(sCallReport.receivedId, 0, 4);
-            tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+            }
             Radio_Reg_State = READY;
 #ifdef DBG
             qDebug() << "WAIT_STOP_CALL_ENDED";
@@ -700,21 +744,30 @@ void TCP::rcv_udpRCP()
                 {
                     sCtrlReply.result = eFailure;
                 }
-                tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
-                tcp_srv.flush();
+                if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                {
+                    tcp_srv.write(reinterpret_cast<char*>(&sCtrlReply), sizeof(sCtrlReply));
+                    tcp_srv.flush();
+                }
             }
             break;
         case WAIT_RELOAD_REPLY:
             if((ba_3005.at(13) == 0xC1) && (ba_3005.at(14) == 0x81)) // page 160
             {
                 sReloadReplay.result = static_cast<unsigned char>(ba_3005.at(17));
-                tcp_srv.write(reinterpret_cast<char*>(&sReloadReplay), sizeof(sReloadReplay));
-                tcp_srv.flush();
+                if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                {
+                    tcp_srv.write(reinterpret_cast<char*>(&sReloadReplay), sizeof(sReloadReplay));
+                    tcp_srv.flush();
+                }
                 if(sReloadReplay.result == eSucces)
                 {
                     Radio_Reg_State = INIT_STATE;
                     sRegMsgReport.reg_unreg_state = UNREGISTRATE;
-                    tcp_srv.write(reinterpret_cast<char*>(&sRegMsgReport), sizeof(sRegMsgReport));
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sRegMsgReport), sizeof(sRegMsgReport));
+                    }
                     reload_tim.start();
                     tcp_srv.disconnectFromHost();
                 }
@@ -730,7 +783,7 @@ void TCP::rcv_udpRCP()
 
             if((ba_3005.at(13) == 0x44) && (ba_3005.at(14) == 0xB8)) // input call
             {  //  44b8 0c00 0100 0000 00ff0000 72000000 b803
-               //            17   19   21       25
+                //            17   19   21       25
                 rx_tim.start();
                 if(ba_3005.at(17) == 1) //  VoiceRX
                 {
@@ -739,22 +792,26 @@ void TCP::rcv_udpRCP()
 
                     sCallReport.receivedId[1] = ba_3005.at(23);
                     sCallReport.receivedId[2] = ba_3005.at(22);
+                    sCallReport.receivedId[3] = ba_3005.at(21);
 
                     if(ba_3005.at(19) == 4)// !!!!!!!!!!!!!!!!!!!
                     {
-                        sCallReport.receivedId[3] = 222;
+                        sCallReport.receivedId[2] = 0xFF;
 #ifdef DBG
                         qDebug() << "monitor call in";
 #endif
                     }
-                    else
-                        sCallReport.receivedId[3] = ba_3005.at(21);
-
+                    //else
+                    //    sCallReport.receivedId[3] = ba_3005.at(21);
                     sCallReport.calledId[1] = ba_3005.at(27);
                     sCallReport.calledId[2] = ba_3005.at(26);
                     sCallReport.calledId[3] = ba_3005.at(25);
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "voice rx";
 #endif
@@ -788,17 +845,30 @@ void TCP::rcv_udpRCP()
                     //                sCallReport.calledId[1] = buf_rx[27];
                     //                sCallReport.calledId[2] = buf_rx[26];
                     //                sCallReport.calledId[3] = buf_rx[25];
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "hang time";
 #endif
                     Radio_Reg_State = RX_HT;
                 }
-                else if (ba_3005.at(17) == 3) {
+                else if (ba_3005.at(17) == 3)
+                {
+                    sCallReport.callState = eCallHandTime ;
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
                     sCallReport.callState = eCallEnded;
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "monitor call end";
 #endif
@@ -815,8 +885,11 @@ void TCP::rcv_udpRCP()
                 qDebug() << "hang time sound";
 #endif
                 sCallReport.callState = eCallInit;
-                tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                tcp_srv.flush();
+                if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                {
+                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                    tcp_srv.flush();
+                }
                 Radio_Reg_State = RX;
                 rx_tim.start();
                 //receive_Sound();
@@ -835,8 +908,11 @@ void TCP::rcv_udpRCP()
                     //                sCallReport.calledId[1] = buf_rx[27];
                     //                sCallReport.calledId[2] = buf_rx[26];
                     //                sCallReport.calledId[3] = buf_rx[25];
-                    tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
-                    tcp_srv.flush();
+                    if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+                    {
+                        tcp_srv.write(reinterpret_cast<char*>(&sCallReport), sizeof(sCallReport));
+                        tcp_srv.flush();
+                    }
 #ifdef DBG
                     qDebug() << "call end";
 #endif

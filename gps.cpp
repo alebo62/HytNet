@@ -143,8 +143,11 @@ void TCP::rcv_udpGPS()
             memcpy(sLocMsgType_TrgRep.Speed, (char*)&result, 4);
             result = get_direction(ba_3003.at(4) - 21);
             memcpy(sLocMsgType_TrgRep.Heading, (char*)&result, 4);
-            tcp_srv.write((char*)&sLocMsgType_TrgRep, sizeof(sLocMsgType_TrgRep));
-            tcp_srv.flush();
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write((char*)&sLocMsgType_TrgRep, sizeof(sLocMsgType_TrgRep));
+                tcp_srv.flush();
+            }
 
 
             //qDebug() << "gps immed 02";
@@ -200,8 +203,11 @@ void TCP::rcv_udpGPS()
             memcpy(sLocMsgType_TrgRep.Speed, (char*)&result, 4);
             result = get_direction(ba_3003.at(4) - 21);
             memcpy(sLocMsgType_TrgRep.Heading, (char*)&result, 4);
-            tcp_srv.write((char*)&sLocMsgType_TrgRep, sizeof(sLocMsgType_TrgRep));
-            tcp_srv.flush();
+            if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+            {
+                tcp_srv.write((char*)&sLocMsgType_TrgRep, sizeof(sLocMsgType_TrgRep));
+                tcp_srv.flush();
+            }
             break;
         case 0x05://  RequestID[4]+RadioIP[4] + Result[2]
 

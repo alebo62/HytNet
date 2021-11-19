@@ -38,7 +38,7 @@ void TCP::udp_srv_slot()
     if(start_sound)
     {
 #ifdef DBG
-                    qDebug() << "sound>>";
+        qDebug() << "sound>>";
 #endif
         memmove(aud_tx + 52 , baUdpHyt.data() + 28  , 480);
         seq_num++;
@@ -65,8 +65,11 @@ void TCP::receive_sound()
     rtp_hdr.seq_no[1] = seq_num & 0xff;
     memcpy(temp_8 ,reinterpret_cast<quint8*>(&rtp_hdr), RTP_HDR_LEN );
     memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52, 160 );
-    udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
-    udp_srv->flush();
+    if(udp_srv)
+    {
+        udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
+        udp_srv->flush();
+    }
     sound_tim.start(); // 15msec timer
 }
 

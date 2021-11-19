@@ -21,7 +21,7 @@ const quint16  TLM = 3006;
 const quint16  DTR = 3007;
 const quint16  SDM = 3009;
 
-const QString serial_num = "5883";            // white box rpi 144
+//const QString serial_num = "5883";            // white box rpi 144
 //const QString serial_num = "9dfb";            // peton
 //const QString serial_num = "0000";            // nanopi H5
 //const QString serial_num = "1abb";            // nanopi H3
@@ -37,7 +37,7 @@ const QString serial_num = "5883";            // white box rpi 144
 //const QString serial_num = "28ea";            //  rpi 162  2011
 //const QString serial_num = "7f91";            //  rpi 161  2002
 //const QString serial_num = "227f";            //  rpi 160(231)  2001
-
+const QString serial_num = "695e";              //  rpi 248  2017
 
 class TCP : public QObject
 {

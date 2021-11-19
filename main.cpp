@@ -24,9 +24,9 @@ int main(int argc, char *argv[])
         str.setNum (radio_id & 0xFF);
         host.append(str);
     }
-    if(argc == 4)
-    {
-        virt_hadrr =  QString(argv[3]).toUInt();
+//    if(argc == 4)
+//    {
+//        virt_hadrr =  QString(argv[3]).toUInt();
 
 //        str.setNum (radio_id >> 16);
 //        host.append(str).append(".");
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 //        host.append(str).append(".");
 //        str.setNum (radio_id & 0xFF);
 //        host.append(str);
-    }
+//    }
     QCoreApplication a(argc, argv);
     TCP tcp;
     return a.exec();

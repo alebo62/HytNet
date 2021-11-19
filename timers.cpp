@@ -45,8 +45,8 @@ void TCP::rad_conn_tim_slot()
 #endif
     udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
     udpRCP_3005.flush();
-    if(++conn_counter == 10)
-        proc.start("sudo reboot");
+//    if(++conn_counter == 10)
+//        proc.start("sudo reboot");
 }
 
 void TCP::tcp_conn_tim_slot()
@@ -83,10 +83,10 @@ void TCP::ping_tim_slot()
 void TCP::reload_tim_slot()
 {
     reload_tim.stop();
-//    state = 0;
-//    udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
-//    Radio_Reg_State = INIT_STATE;
-//    msg_cnt = 0;
+    //    state = 0;
+    //    udpRCP_3005.writeDatagram((char*)conn, 12, QHostAddress(host), RCP);
+    //    Radio_Reg_State = INIT_STATE;
+    //    msg_cnt = 0;
 #ifdef DBG
     qDebug() << "reload tim slot";
 #endif
@@ -101,8 +101,11 @@ void TCP::radio_check_tim_slot()
         check_online = 0;
         sCtrlReply.result = 1; // fail
         sCtrlReply.req_type = 0;// radio check
-        tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
-        tcp_srv.flush();
+        if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+        {
+            tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
+            tcp_srv.flush();
+        }
 #ifdef DBG
         qDebug() << "radio check timer";
 #endif
@@ -117,8 +120,11 @@ void TCP::monitor_tim_slot()
         sCtrlReply.result = 1; // fail
         //sCtrlReply.req_type = 3;// monitor radio
         monitor_tim.stop();
-        tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
-        tcp_srv.flush();
+        if(tcp_srv.state() ==  QAbstractSocket::ConnectedState)
+        {
+            tcp_srv.write((char*)&sCtrlReply, sizeof(sCtrlReply));
+            tcp_srv.flush();
+        }
 #ifdef DBG
         qDebug() << "radio monitor timer";
 #endif
@@ -176,9 +182,11 @@ void TCP::sound_tim_slot()
     rtp_hdr.seq_no[1] = seq_num & 0xff;
     memcpy(temp_8 ,reinterpret_cast<quint8*>(&rtp_hdr), RTP_HDR_LEN );
     memcpy(temp_8 + RTP_HDR_LEN , ba_3005.data() + 52 + 160 * sound_tim_counter, 160 );
-    udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
-    udp_srv->flush();
-
+    if(udp_srv)
+    {
+        udp_srv->writeDatagram( reinterpret_cast<char*>(temp_8), 160 + RTP_HDR_LEN, QHostAddress(hadrr), hyt_udp_port);
+        udp_srv->flush();
+    }
     if(sound_tim_counter == 2)
     {
         sound_tim.stop();

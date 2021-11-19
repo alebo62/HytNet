@@ -142,13 +142,11 @@ void TCP::rcv_tcpRCP()
     {
         if(sRegMsgReport.signal_mode) // digital mode
         {
-            //sound_timer.stop();
             if((Radio_Reg_State == WAIT_STOP_CALL_REPLY) || (Radio_Reg_State == WAIT_STOP_CALL_HANGIN))// 0x0A
             {
-                //sound1_timer.stop();
+                tx_tim.stop();
                 Radio_Reg_State = WAIT_STOP_CALL_REPLY;
                 start_sound = 0;
-                //sound_buff_cnt_in = 0;
                 memcpy(sCallStopReply.reqid, ba.data() + 2 + sizeof(header), 4);
                 msg_cnt++;
                 ptt_release_req.packet_num[0] = msg_cnt >> 8;// page 159
@@ -157,7 +155,6 @@ void TCP::rcv_tcpRCP()
                 memcpy(buf_tx + 17, reinterpret_cast<char*>(ptt_release_req.pep.pld), ptt_release_req.pep.num_of_bytes[0]);
                 memcpy(buf_tx + 17 + ptt_release_req.pep.num_of_bytes[0], reinterpret_cast<char*>(&ptt_release_req + 21), 2 );
                 checksum(buf_tx);
-                //returned = libusb_bulk_transfer(usb_hdl, 4, buf_tx, ptt_release_req.length[1], &act_len, 1000);
                 udpRCP_3005.writeDatagram((char*)buf_tx, ptt_release_req.length[1], QHostAddress(host), RCP);
                 udpRCP_3005.flush();
 #ifdef DBG

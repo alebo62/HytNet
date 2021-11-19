@@ -22,6 +22,8 @@ public:
 
 void route_rpi()
 {
+    int route = 0;
+    Sleeper::sleep(5);
     QStringList sl;
     do
     {
@@ -35,28 +37,33 @@ void route_rpi()
 #ifdef DBG
     qDebug() << "usb and serial ok";
 #endif
-    proc.start("sudo route -n");
-    proc.waitForFinished();
-    sl = ((QString)proc.readAllStandardOutput()).split('\n');
-    for(int i = 0; i < sl.size(); i++)
+    while(!route)
     {
+        Sleeper::sleep(3);
+        proc.start("sudo route -n");
+        proc.waitForFinished();
+        sl = ((QString)proc.readAllStandardOutput()).split('\n');
+        for(int i = 0; i < sl.size(); i++)
+        {
 #ifdef NANOPI_H3
-        if(sl[i].contains("192.168.10.1") && sl[i].endsWith("enx00000a0000df"))
-        {
-            proc.start("sudo route del -net 0.0.0.0 gw 192.168.0.1");
-            proc.waitForFinished();
-//            proc.start("sudo route del -net 0.0.0.0 gw 192.168.10.1");
-//            proc.waitForFinished();
-            proc.start("sudo route add -net 10.0.0.0/8 gw 192.168.10.1 enx00000a0000df");
-            proc.waitForFinished();
-        }
+            if(sl[i].contains("192.168.10.1") && sl[i].endsWith("enx00000a0000df"))
+            {
+                proc.start("sudo route del -net 0.0.0.0 gw 192.168.0.1");
+                proc.waitForFinished();
+                //            proc.start("sudo route del -net 0.0.0.0 gw 192.168.10.1");
+                //            proc.waitForFinished();
+                proc.start("sudo route add -net 10.0.0.0/8 gw 192.168.10.1 enx00000a0000df");
+                proc.waitForFinished();
+            }
 #else
-        if(sl[i].contains("192.168.10.0") && sl[i].endsWith("eth1"))//enx00000c000034"))
-        {
-            proc.start("sudo route add -net 10.0.0.0/8 gw 192.168.10.1 eth1");
-            proc.waitForFinished();
-        }
+            if(sl[i].contains("192.168.10.0") && sl[i].endsWith("eth1"))//enx00000c000034"))
+            {
+                proc.start("sudo route add -net 10.0.0.0/8 gw 192.168.10.1 eth1");
+                proc.waitForFinished();
+                route = 1;
+            }
 #endif
+        }
     }
 #ifdef DBG
     qDebug() << "end route";
